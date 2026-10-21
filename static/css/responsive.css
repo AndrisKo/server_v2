@@ -1,0 +1,592 @@
+/* ==========================================================================
+   PIXELVAULT — RESPONSIVE & MOBILE DESIGN SYSTEM (BOOTSWATCH SOLAR)
+   Dedicated stylesheet for smartphones, tablets & touch devices.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. GLOBAL MOBILE TOUCH & ACCESSIBILITY RULES
+   -------------------------------------------------------------------------- */
+@media (max-width: 991px) {
+    /* Safe-area insets support for iPhone notch & dynamic islands */
+    .page-wrapper {
+        padding-left: max(0.5rem, env(safe-area-inset-left));
+        padding-right: max(0.5rem, env(safe-area-inset-right));
+        overflow-x: hidden;
+    }
+
+    /* Prevent auto-zoom on iOS when focusing form inputs */
+    input[type="text"],
+    input[type="file"],
+    input[type="search"],
+    select,
+    textarea {
+        font-size: 16px !important;
+    }
+
+    /* Touch optimization */
+    button,
+    .btn,
+    .nav-link,
+    .table-link {
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
+    }
+}
+
+/* --------------------------------------------------------------------------
+   2. TABLET BREAKPOINT (max-width: 991px)
+   -------------------------------------------------------------------------- */
+@media (max-width: 991px) {
+    /* Header layout */
+    .header-container {
+        padding: 0.75rem 1.25rem;
+        gap: 1rem;
+    }
+
+    /* Hero section */
+    .hero-section {
+        padding: 4rem 1.25rem 3rem;
+    }
+
+    .hero-title {
+        font-size: 2.4rem;
+        line-height: 1.2;
+    }
+
+    .hero-subtitle {
+        font-size: 1.05rem;
+        max-width: 100%;
+    }
+
+    /* Features Grid */
+    .features-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.25rem;
+    }
+
+    /* Gallery Grid */
+    .gallery-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.25rem;
+    }
+
+    /* Upload layout */
+    .upload-layout {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+}
+
+/* --------------------------------------------------------------------------
+   3. MOBILE PHONES (max-width: 768px)
+   -------------------------------------------------------------------------- */
+@media (max-width: 768px) {
+    /* Header & Navigation Bar */
+    .site-header {
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+    }
+
+    .header-container {
+        flex-direction: column;
+        align-items: stretch;
+        padding: 0.75rem 1rem;
+        gap: 0.75rem;
+    }
+
+    .brand {
+        justify-content: center;
+        width: 100%;
+    }
+
+    .brand-text {
+        font-size: 1.35rem;
+    }
+
+    /* Mobile App-style Navigation Bar (4 equal tabs: 25% each, icon on top, text below) */
+    .nav-links {
+        display: flex;
+        flex-direction: row;
+        width: 100%;
+        justify-content: space-between;
+        align-items: stretch;
+        gap: 0.25rem;
+        padding: 0.35rem;
+        background: rgba(0, 33, 41, 0.85);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-lg);
+        box-sizing: border-box;
+        overflow: hidden;
+    }
+
+    .nav-links::-webkit-scrollbar {
+        display: none;
+    }
+
+    .nav-link {
+        flex: 1 1 0;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 0.45rem 0.15rem;
+        font-size: 0.76rem;
+        font-weight: 600;
+        gap: 0.25rem;
+        text-align: center;
+        border-radius: var(--radius-md);
+        white-space: nowrap;
+        min-height: 48px;
+    }
+
+    .nav-link svg {
+        width: 18px;
+        height: 18px;
+        flex-shrink: 0;
+    }
+
+    .nav-link span {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 100%;
+        line-height: 1.1;
+    }
+
+    /* Адаптивное сокращение "Список файлов" -> "Список" для идеального размещения всех 4 кнопок */
+    .nav-text-extra {
+        display: none;
+    }
+
+    .header-actions {
+        display: none; /* Hide cosmetic solar badge to preserve mobile vertical space */
+    }
+
+    /* Page Containers & Headings */
+    .app-container,
+    .app-container-gallery,
+    .gallery-page-container {
+        padding: 1.75rem 1rem !important;
+        width: 100% !important;
+    }
+
+    .page-header {
+        margin-bottom: 1.5rem;
+        text-align: left;
+    }
+
+    .page-title {
+        font-size: 1.75rem !important;
+        line-height: 1.25;
+    }
+
+    .page-subtitle {
+        font-size: 0.95rem;
+    }
+
+    /* Hero & Landing Section */
+    .hero-section {
+        padding: 2.5rem 1rem 2rem;
+        text-align: center;
+    }
+
+    .hero-title {
+        font-size: 2rem;
+        letter-spacing: -0.02em;
+        margin-bottom: 0.85rem;
+    }
+
+    .hero-subtitle {
+        font-size: 0.95rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .hero-actions {
+        flex-direction: column;
+        width: 100%;
+        gap: 0.75rem;
+    }
+
+    .hero-actions .btn {
+        width: 100%;
+        justify-content: center;
+        min-height: 48px;
+        font-size: 1rem;
+    }
+
+    .features-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
+    .feature-card {
+        padding: 1.25rem;
+    }
+
+    /* Showcase items on Home */
+    .showcase-grid {
+        display: flex;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        gap: 0.75rem;
+        padding-bottom: 0.5rem;
+    }
+
+    .showcase-item {
+        flex: 0 0 140px;
+        width: 140px;
+    }
+
+    /* Upload Dropzone & Controls */
+    .upload-main-card {
+        padding: 1.25rem 1rem;
+        border-radius: var(--radius-md);
+    }
+
+    .upload-dropzone {
+        padding: 2rem 1rem;
+        min-height: 180px;
+        border-width: 2px;
+    }
+
+    .dropzone-icon {
+        width: 48px;
+        height: 48px;
+        margin-bottom: 0.75rem;
+    }
+
+    .dropzone-title {
+        font-size: 1.1rem;
+    }
+
+    .dropzone-desc {
+        font-size: 0.85rem;
+    }
+
+    .upload-btn-container {
+        margin-top: 1.25rem;
+    }
+
+    .upload-btn-container .btn-primary {
+        width: 100%;
+        min-height: 50px;
+        font-size: 1.05rem;
+        font-weight: 700;
+        justify-content: center;
+    }
+
+    /* Upload Results Cards */
+    .result-card {
+        flex-direction: column;
+        align-items: stretch;
+        padding: 1.25rem;
+        gap: 1rem;
+    }
+
+    .result-thumb-wrapper {
+        width: 100%;
+        height: 180px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background: rgba(0, 0, 0, 0.25);
+        border-radius: var(--radius-md);
+    }
+
+    .result-thumb {
+        max-height: 100%;
+        max-width: 100%;
+        object-fit: contain;
+    }
+
+    .link-input-group {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.5rem;
+    }
+
+    .link-input-group input {
+        width: 100%;
+    }
+
+    .link-input-group .btn-copy {
+        width: 100%;
+        justify-content: center;
+        min-height: 42px;
+    }
+
+    /* Gallery Page */
+    .gallery-grid {
+        grid-template-columns: 1fr;
+        gap: 1.25rem;
+    }
+
+    .gallery-card {
+        border-radius: var(--radius-md);
+        overflow: hidden;
+        position: relative;
+    }
+
+    .gallery-card-preview {
+        position: relative;
+        z-index: 1;
+    }
+
+    .gallery-card-body {
+        position: relative;
+        z-index: 10;
+        background-color: var(--bg-surface);
+    }
+
+    .gallery-action-btn {
+        position: relative;
+        z-index: 20;
+        cursor: pointer;
+        touch-action: manipulation;
+    }
+
+    /* ----------------------------------------------------------------------
+       TABLE & REGISTRY (/images-list) ON MOBILE — CARD TRANSFORMATION
+       Turns traditional table rows into stylish, touch-friendly Solar cards
+       ---------------------------------------------------------------------- */
+    .table-responsive {
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        overflow-x: visible !important;
+        margin-bottom: 1.5rem;
+    }
+
+    .solar-table,
+    .solar-table thead,
+    .solar-table tbody,
+    .solar-table tr,
+    .solar-table th,
+    .solar-table td {
+        display: block !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        box-sizing: border-box;
+    }
+
+    /* Hide desktop table header on mobile devices */
+    .solar-table thead {
+        display: none !important;
+    }
+
+    /* Card container for each database record */
+    .solar-table tbody {
+        display: flex !important;
+        flex-direction: column;
+        gap: 1.25rem;
+    }
+
+    .solar-table tbody tr {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-lg);
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+        padding: 1.25rem;
+        position: relative;
+        transition: transform var(--transition-fast), border-color var(--transition-fast);
+    }
+
+    .solar-table tbody tr:hover {
+        border-color: var(--solar-cyan);
+        background: var(--bg-surface-hover);
+    }
+
+    /* Data rows inside card */
+    .solar-table td {
+        display: flex !important;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.65rem 0 !important;
+        border-bottom: 1px dashed rgba(88, 110, 117, 0.3) !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        text-align: right;
+    }
+
+    /* Label on the left of each row */
+    .solar-table td::before {
+        content: attr(data-label);
+        font-size: 0.78rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--solar-base1);
+        margin-right: 0.75rem;
+        flex-shrink: 0;
+        text-align: left;
+    }
+
+    .solar-table td.col-filename {
+        border-top: none;
+        padding-top: 0 !important;
+    }
+
+    .solar-table td.col-filename .table-link {
+        max-width: 70%;
+        justify-content: flex-end;
+    }
+
+    .solar-table td.col-orig-name {
+        align-items: flex-start;
+    }
+
+    .solar-table td.col-orig-name .orig-filename-text {
+        text-align: right;
+        max-width: 70%;
+        line-height: 1.35;
+        font-size: 0.9rem;
+    }
+
+    .solar-table td.col-size .badge-size {
+        font-size: 0.85rem;
+    }
+
+    .solar-table td.col-date .date-text {
+        font-size: 0.85rem;
+    }
+
+    .solar-table td.col-type .badge-type {
+        font-size: 0.8rem;
+    }
+
+    /* Action button at bottom of card */
+    .solar-table td.col-action {
+        border-bottom: none !important;
+        padding-top: 1rem !important;
+        padding-bottom: 0 !important;
+        margin-top: 0.25rem;
+        display: block !important;
+        text-align: center;
+    }
+
+    .solar-table td.col-action::before {
+        display: none !important;
+    }
+
+    .solar-table td.col-action form {
+        display: block !important;
+        width: 100% !important;
+        margin: 0 !important;
+    }
+
+    .solar-table td.col-action .btn-delete-row,
+    .solar-table td.col-action .btn {
+        width: 100% !important;
+        display: inline-flex !important;
+        justify-content: center !important;
+        align-items: center !important;
+        gap: 0.5rem;
+        min-height: 44px;
+        padding: 0.75rem 1rem !important;
+        font-size: 0.95rem !important;
+        font-weight: 600;
+        border-radius: var(--radius-md);
+        box-shadow: 0 2px 8px rgba(220, 50, 47, 0.25);
+    }
+
+    /* На смартфонах показываем полное название кнопки: "Удалить изображение" */
+    .btn-text-mobile-extra {
+        display: inline !important;
+    }
+
+    /* Pagination Bar on Mobile */
+    .pagination-bar {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 1rem;
+        padding: 1rem;
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-md);
+    }
+
+    .pagination-info {
+        text-align: center;
+        font-size: 0.9rem;
+    }
+
+    .pagination-nav {
+        display: flex;
+        width: 100%;
+        gap: 0.5rem;
+    }
+
+    .pagination-btn {
+        flex: 1;
+        justify-content: center;
+        min-height: 44px;
+        padding: 0.6rem 0.75rem;
+        font-size: 0.85rem;
+    }
+
+    /* Alerts */
+    .alert-solar {
+        padding: 0.85rem 1rem;
+        font-size: 0.9rem;
+        border-radius: var(--radius-md);
+    }
+
+    /* Footer */
+    .footer-container {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+        padding: 1.5rem 1rem;
+    }
+
+    .footer-links {
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+}
+
+/* --------------------------------------------------------------------------
+   4. ULTRA-COMPACT SMARTPHONES (max-width: 480px)
+   -------------------------------------------------------------------------- */
+@media (max-width: 480px) {
+    .page-title {
+        font-size: 1.5rem !important;
+    }
+
+    .brand-icon-wrapper {
+        width: 32px;
+        height: 32px;
+    }
+
+    .brand-text {
+        font-size: 1.2rem;
+    }
+
+    .nav-link {
+        font-size: 0.72rem;
+        padding: 0.35rem 0.1rem;
+        min-height: 44px;
+    }
+
+    .nav-link svg {
+        width: 16px;
+        height: 16px;
+    }
+
+    .hero-title {
+        font-size: 1.7rem;
+    }
+
+    .gallery-thumb-container {
+        height: 180px;
+    }
+
+    .pagination-btn span {
+        font-size: 0.8rem;
+    }
+}

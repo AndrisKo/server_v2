@@ -1,0 +1,1672 @@
+/* ==========================================================================
+   PIXELVAULT — BOOTSWATCH SOLAR THEME (SOLARIZED DESIGN SYSTEM)
+   Inspired by Ethan Schoonover's Solarized & Bootswatch Solar
+   Features: Pure CSS EN/RU Localization, Pure CSS Lightbox Modals (:target),
+             Interactive Tabs & Format Selectors, Solarized Gradients & Glows
+   ========================================================================== */
+
+/* --- Bootswatch Solar Design Tokens --- */
+:root {
+    --font-main: 'Source Sans 3', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    --font-mono: 'JetBrains Mono', 'SFMono-Regular', Menlo, Monaco, Consolas, monospace;
+
+    /* Solarized Core Palette */
+    --solar-base03: #002b36;
+    /* Deep Background */
+    --solar-base02: #073642;
+    /* Card & Surface BG */
+    --solar-base01: #586e75;
+    /* Borders & Subtle Muted */
+    --solar-base00: #657b83;
+    /* Secondary Content */
+    --solar-base0: #839496;
+    /* Primary Body Text */
+    --solar-base1: #93a1a1;
+    /* Headings & Emphasized Text */
+    --solar-base2: #eee8d5;
+    /* High Contrast Text */
+    --solar-base3: #fdf6e3;
+    /* Light Highlights */
+
+    --solar-yellow: #b58900;
+    /* Bootswatch Solar Primary */
+    --solar-orange: #cb4b16;
+    /* Warning */
+    --solar-red: #dc322f;
+    /* Danger (alt) */
+    --solar-magenta: #d33682;
+    /* Bootswatch Solar Danger */
+    --solar-violet: #6c71c4;
+    /* Accent / Special */
+    --solar-blue: #268bd2;
+    /* Info / Links */
+    --solar-cyan: #2aa198;
+    /* Success / Secondary */
+    --solar-green: #859900;
+    /* Pure Green */
+
+    /* Semantic Theme Aliases */
+    --bg-page: var(--solar-base03);
+    --bg-surface: var(--solar-base02);
+    --bg-surface-alt: #0a404e;
+    --bg-surface-hover: #0c4d5d;
+    --bg-card: var(--solar-base02);
+    --bg-card-hover: #0a3d4a;
+    --bg-nav: rgba(0, 43, 54, 0.95);
+    --bg-input: #002129;
+    --bg-modal: #073642;
+
+    --text-primary: var(--solar-base0);
+    --text-heading: var(--solar-base1);
+    --text-bright: var(--solar-base2);
+    --text-highlight: var(--solar-base3);
+    --text-muted: var(--solar-base01);
+    --text-code: var(--solar-cyan);
+
+    --border-color: rgba(88, 110, 117, 0.35);
+    --border-color-hover: rgba(181, 137, 0, 0.5);
+    --border-dashed: var(--solar-yellow);
+
+    --accent-primary: var(--solar-yellow);
+    --accent-primary-hover: #d19f00;
+    --accent-primary-active: #967100;
+    --accent-secondary: var(--solar-cyan);
+    --accent-secondary-hover: #33b8ad;
+    --accent-info: var(--solar-blue);
+    --accent-info-hover: #3a9de0;
+    --accent-danger: var(--solar-magenta);
+    --accent-danger-hover: #e04491;
+    --accent-warning: var(--solar-orange);
+
+    --accent-light: rgba(181, 137, 0, 0.12);
+    --accent-glow: rgba(181, 137, 0, 0.28);
+    --cyan-glow: rgba(42, 161, 152, 0.3);
+
+    --hero-gradient: radial-gradient(circle at 50% -10%, rgba(181, 137, 0, 0.18) 0%, rgba(42, 161, 152, 0.08) 40%, rgba(0, 43, 54, 0) 75%);
+
+    --shadow-xs: 0 1px 3px rgba(0, 0, 0, 0.35);
+    --shadow-sm: 0 4px 14px rgba(0, 0, 0, 0.45);
+    --shadow-md: 0 10px 28px rgba(0, 0, 0, 0.55);
+    --shadow-lg: 0 20px 45px rgba(0, 0, 0, 0.65);
+    --shadow-glow: 0 0 24px var(--accent-glow);
+
+    --radius-sm: 4px;
+    --radius-md: 6px;
+    --radius-lg: 8px;
+    --radius-xl: 12px;
+    --radius-full: 9999px;
+
+    --transition-fast: 0.15s ease;
+    --transition-normal: 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* --- Global Reset & Base Setup --- */
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html {
+    font-size: 16px;
+    scroll-behavior: smooth;
+    color-scheme: dark;
+}
+
+body {
+    font-family: var(--font-main);
+    background-color: var(--bg-page);
+    color: var(--text-primary);
+    line-height: 1.6;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+.page-wrapper {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    background: var(--hero-gradient);
+}
+
+/* --- Typography & Headings --- */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    color: var(--text-heading);
+    font-weight: 700;
+    line-height: 1.25;
+    letter-spacing: -0.02em;
+}
+
+h1 {
+    font-size: 2.5rem;
+}
+
+h2 {
+    font-size: 1.85rem;
+}
+
+h3 {
+    font-size: 1.35rem;
+}
+
+h4 {
+    font-size: 1.15rem;
+}
+
+p {
+    color: var(--text-primary);
+    margin-bottom: 1rem;
+}
+
+a {
+    color: var(--accent-secondary);
+    text-decoration: none;
+    transition: color var(--transition-fast);
+}
+
+a:hover {
+    color: var(--accent-primary);
+    text-decoration: none;
+}
+
+code,
+pre {
+    font-family: var(--font-mono);
+}
+
+/* Utility classes */
+.d-none {
+    display: none !important;
+}
+
+/* ==========================================================================
+   HEADER / NAVBAR (Bootswatch Solar Style)
+   ========================================================================== */
+.site-header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background-color: var(--bg-nav);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border-color);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.header-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0.85rem 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+}
+
+/* Brand */
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: var(--text-bright);
+    font-weight: 700;
+    font-size: 1.3rem;
+    letter-spacing: -0.02em;
+    text-decoration: none;
+}
+
+.brand:hover {
+    color: var(--accent-primary);
+}
+
+.brand-icon-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    background: linear-gradient(135deg, var(--solar-yellow) 0%, var(--solar-orange) 100%);
+    color: var(--solar-base03);
+    border-radius: var(--radius-md);
+    box-shadow: 0 2px 10px rgba(181, 137, 0, 0.4);
+    transition: transform var(--transition-normal);
+}
+
+.brand:hover .brand-icon-wrapper {
+    transform: rotate(6deg) scale(1.05);
+}
+
+.brand-text {
+    color: var(--solar-base2);
+    font-weight: 800;
+}
+
+.brand-badge {
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 0.2rem 0.5rem;
+    border-radius: var(--radius-sm);
+    background-color: rgba(181, 137, 0, 0.2);
+    color: var(--solar-yellow);
+    border: 1px solid rgba(181, 137, 0, 0.4);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+/* Navigation Links */
+.nav-links {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    list-style: none;
+}
+
+.nav-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.55rem 0.95rem;
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    font-weight: 600;
+    border-radius: var(--radius-md);
+    transition: all var(--transition-fast);
+}
+
+.nav-link:hover {
+    color: var(--solar-base2);
+    background-color: var(--bg-surface);
+}
+
+.nav-link.active {
+    color: var(--solar-base03);
+    background-color: var(--accent-primary);
+    font-weight: 700;
+    box-shadow: 0 2px 8px rgba(181, 137, 0, 0.35);
+}
+
+/* Header Controls & Actions */
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.control-btn-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.45rem 0.85rem;
+    background-color: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    color: var(--text-primary);
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    user-select: none;
+    transition: all var(--transition-fast);
+}
+
+.control-btn-label:hover {
+    border-color: var(--accent-primary);
+    color: var(--solar-base2);
+    background-color: var(--bg-surface-alt);
+    box-shadow: 0 0 10px rgba(181, 137, 0, 0.2);
+}
+
+.lang-badge {
+    background-color: var(--solar-base03);
+    color: var(--solar-cyan);
+    padding: 0.15rem 0.45rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.75rem;
+    font-weight: 700;
+    border: 1px solid rgba(42, 161, 152, 0.4);
+}
+
+.theme-pill-badge {
+    background-color: rgba(181, 137, 0, 0.2);
+    color: var(--solar-yellow);
+    padding: 0.15rem 0.5rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.75rem;
+    font-weight: 700;
+    border: 1px solid rgba(181, 137, 0, 0.4);
+}
+
+/* ==========================================================================
+   BUTTONS (Bootswatch Solar)
+   ========================================================================== */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.65rem 1.4rem;
+    font-family: var(--font-main);
+    font-size: 0.95rem;
+    font-weight: 600;
+    border-radius: var(--radius-md);
+    border: 1px solid transparent;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all var(--transition-normal);
+    line-height: 1.4;
+}
+
+.btn-primary {
+    background-color: var(--solar-yellow);
+    color: var(--solar-base03) !important;
+    font-weight: 700;
+    box-shadow: 0 4px 14px rgba(181, 137, 0, 0.35);
+}
+
+.btn-primary:hover {
+    background-color: var(--accent-primary-hover);
+    color: var(--solar-base03) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(181, 137, 0, 0.5);
+}
+
+.btn-secondary {
+    background-color: var(--solar-cyan);
+    color: var(--solar-base03) !important;
+    font-weight: 700;
+    box-shadow: 0 4px 14px rgba(42, 161, 152, 0.3);
+}
+
+.btn-secondary:hover {
+    background-color: var(--accent-secondary-hover);
+    color: var(--solar-base03) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(42, 161, 152, 0.45);
+}
+
+.btn-outline-info {
+    background-color: transparent;
+    color: var(--solar-blue) !important;
+    border: 1px solid var(--solar-blue);
+}
+
+.btn-outline-info:hover {
+    background-color: var(--solar-blue);
+    color: var(--solar-base03) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(38, 139, 210, 0.4);
+}
+
+.btn-outline-solar {
+    background-color: var(--bg-surface);
+    color: var(--text-heading) !important;
+    border: 1px solid var(--border-color);
+}
+
+.btn-outline-solar:hover {
+    background-color: var(--bg-surface-alt);
+    border-color: var(--solar-yellow);
+    color: var(--solar-base2) !important;
+    transform: translateY(-2px);
+}
+
+.btn-danger {
+    background-color: var(--solar-magenta);
+    color: #fff !important;
+}
+
+.btn-danger:hover {
+    background-color: var(--accent-danger-hover);
+    transform: translateY(-2px);
+}
+
+/* ==========================================================================
+   HERO SECTION (Showcase)
+   ========================================================================== */
+.hero-section {
+    padding: 4rem 1.5rem 0.5rem;
+    text-align: center;
+    max-width: 960px;
+    margin: 0 auto;
+}
+
+.hero-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.35rem 0.9rem;
+    background-color: var(--bg-surface);
+    border: 1px solid rgba(181, 137, 0, 0.35);
+    border-radius: var(--radius-full);
+    color: var(--solar-yellow);
+    font-size: 0.85rem;
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
+}
+
+.hero-tag-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: var(--solar-cyan);
+    box-shadow: 0 0 8px var(--solar-cyan);
+    animation: pulseGlow 2s infinite ease-in-out;
+}
+
+@keyframes pulseGlow {
+
+    0%,
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+
+    50% {
+        transform: scale(1.3);
+        opacity: 0.6;
+    }
+}
+
+.hero-title {
+    font-size: 3.2rem;
+    font-weight: 800;
+    line-height: 1.15;
+    margin-bottom: 1.25rem;
+    color: var(--solar-base2);
+    letter-spacing: -0.03em;
+}
+
+.hero-title .gradient-text {
+    background: linear-gradient(135deg, var(--solar-yellow) 0%, var(--solar-cyan) 60%, var(--solar-blue) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    display: inline-block;
+}
+
+.hero-subtitle {
+    font-size: 1.15rem;
+    color: var(--solar-base0);
+    max-width: 680px;
+    margin: 0 auto 2rem;
+    line-height: 1.6;
+}
+
+.hero-actions {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 3rem;
+}
+
+/* ==========================================================================
+   SHOWCASE GRID / DECK (Home Carousel & Cards)
+   ========================================================================== */
+.showcase-wrapper {
+    max-width: 1200px;
+    margin: 0 auto 4rem;
+    padding: 0 1.5rem;
+}
+
+.showcase-card-container {
+    background-color: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-xl);
+    padding: 1.75rem;
+    box-shadow: var(--shadow-md);
+}
+
+.showcase-grid {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 1.25rem;
+}
+
+.showcase-item {
+    position: relative;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    background-color: var(--solar-base03);
+    border: 1px solid var(--border-color);
+    aspect-ratio: 4 / 5;
+    width: 220px;
+    max-width: 100%;
+    flex: 0 0 220px;
+    display: block;
+    text-decoration: none;
+    transition: all var(--transition-normal);
+    box-shadow: var(--shadow-xs);
+}
+
+.showcase-empty-card {
+    width: 100%;
+}
+
+.showcase-item:hover {
+    transform: translateY(-6px);
+    border-color: var(--solar-yellow);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5), 0 0 18px var(--accent-glow);
+}
+
+.showcase-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform var(--transition-normal);
+}
+
+.showcase-item:hover img {
+    transform: scale(1.06);
+}
+
+.showcase-item-info {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 1rem;
+    background: linear-gradient(to top, rgba(0, 43, 54, 0.95) 0%, rgba(0, 43, 54, 0.6) 70%, rgba(0, 43, 54, 0) 100%);
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+}
+
+.showcase-item-name {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--solar-base2);
+}
+
+.showcase-item-tag {
+    font-size: 0.75rem;
+    color: var(--solar-cyan);
+    font-weight: 500;
+}
+
+.showcase-item-badge {
+    padding: 0.2rem 0.45rem;
+    font-size: 0.65rem;
+    font-weight: 700;
+    background-color: var(--solar-yellow);
+    color: var(--solar-base03);
+    border-radius: var(--radius-sm);
+}
+
+/* ==========================================================================
+   FEATURES SECTION (Bootswatch Solar Cards)
+   ========================================================================== */
+.features-grid {
+    max-width: 1200px;
+    margin: 0 auto 1.5rem;
+    padding: 0 1.5rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+}
+
+.feature-card {
+    background-color: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 2rem;
+    transition: all var(--transition-normal);
+    position: relative;
+    overflow: hidden;
+}
+
+.feature-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background: linear-gradient(90deg, var(--solar-yellow), var(--solar-cyan));
+    opacity: 0;
+    transition: opacity var(--transition-fast);
+}
+
+.feature-card:hover {
+    border-color: var(--solar-yellow);
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-md);
+}
+
+.feature-card:hover::before {
+    opacity: 1;
+}
+
+.feature-icon-box {
+    width: 48px;
+    height: 48px;
+    border-radius: var(--radius-md);
+    background-color: var(--solar-base03);
+    border: 1px solid rgba(181, 137, 0, 0.35);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--solar-yellow);
+    margin-bottom: 1.25rem;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+.feature-title {
+    font-size: 1.2rem;
+    color: var(--solar-base2);
+    margin-bottom: 0.65rem;
+}
+
+.feature-desc {
+    font-size: 0.95rem;
+    color: var(--solar-base0);
+    line-height: 1.55;
+    margin-bottom: 0;
+}
+
+/* ==========================================================================
+   APP CONTAINER / TABS / FORMS (Upload & Gallery Pages)
+   ========================================================================== */
+.app-container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+    width: 100%;
+}
+
+.app-container-gallery {
+    max-width: 1320px;
+}
+
+.page-header {
+    text-align: center;
+    margin-bottom: 2rem;
+    margin-top: 1rem;
+}
+
+.page-title {
+    font-size: 2.3rem;
+    font-weight: 800;
+    color: var(--solar-base2);
+    margin-bottom: 0.5rem;
+}
+
+.page-subtitle {
+    font-size: 1.05rem;
+    color: var(--solar-base0);
+}
+
+/* Navigation Tabs (Solar Nav-Pills) */
+.tabs-nav {
+    display: flex;
+    justify-content: center;
+    gap: 0.75rem;
+    margin-bottom: 2.5rem;
+}
+
+.tab-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    padding: 0.65rem 1.4rem;
+    background-color: var(--bg-surface);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    font-size: 0.95rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all var(--transition-fast);
+}
+
+.tab-btn:hover {
+    color: var(--solar-base2);
+    border-color: var(--solar-yellow);
+    background-color: var(--bg-surface-alt);
+}
+
+.tab-btn.active {
+    background-color: var(--solar-yellow);
+    color: var(--solar-base03) !important;
+    border-color: var(--solar-yellow);
+    font-weight: 700;
+    box-shadow: 0 4px 14px rgba(181, 137, 0, 0.35);
+}
+
+.tab-counter {
+    background-color: var(--solar-base03);
+    color: var(--solar-yellow);
+    padding: 0.15rem 0.5rem;
+    border-radius: var(--radius-full);
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.tab-btn.active .tab-counter {
+    background-color: var(--solar-base03);
+    color: var(--solar-yellow);
+}
+
+/* ==========================================================================
+   UPLOAD CARD & DROPZONE
+   ========================================================================== */
+.upload-card {
+    background-color: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-xl);
+    padding: 2.25rem;
+    box-shadow: var(--shadow-md);
+}
+
+.dropzone {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 1.5rem;
+    border: 2px dashed var(--border-dashed);
+    border-radius: var(--radius-lg);
+    background-color: rgba(0, 43, 54, 0.6);
+    cursor: pointer;
+    text-align: center;
+    transition: all var(--transition-normal);
+}
+
+.dropzone:hover {
+    border-color: var(--solar-cyan);
+    background-color: rgba(42, 161, 152, 0.08);
+    box-shadow: 0 0 20px rgba(42, 161, 152, 0.2);
+    transform: scale(1.005);
+}
+
+.dropzone-icon {
+    width: 68px;
+    height: 68px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, rgba(181, 137, 0, 0.2) 0%, rgba(42, 161, 152, 0.2) 100%);
+    border: 1px solid var(--solar-yellow);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--solar-yellow);
+    margin-bottom: 1.25rem;
+    transition: all var(--transition-normal);
+}
+
+.dropzone:hover .dropzone-icon {
+    color: var(--solar-cyan);
+    border-color: var(--solar-cyan);
+    transform: translateY(-4px);
+}
+
+.dropzone-title {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--solar-base2);
+    margin-bottom: 0.4rem;
+}
+
+.dropzone-hint {
+    font-size: 0.9rem;
+    color: var(--solar-base0);
+    margin-bottom: 1.25rem;
+}
+
+.dropzone-badges {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.format-badge {
+    padding: 0.25rem 0.6rem;
+    background-color: var(--solar-base03);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    color: var(--solar-cyan);
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.upload-btn-row {
+    margin-top: 1.75rem;
+    display: flex;
+    justify-content: center;
+}
+
+.upload-submit-btn {
+    width: 100%;
+    max-width: 320px;
+    padding: 0.85rem 1.5rem;
+    font-size: 1.05rem;
+}
+
+/* ==========================================================================
+   LINKS GENERATOR / EMBED CODES SECTION (Bootswatch Solar Code Blocks)
+   ========================================================================== */
+.links-section {
+    margin-top: 2.5rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.links-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+    flex-wrap: wrap;
+}
+
+.links-title {
+    font-size: 1.15rem;
+    color: var(--solar-base2);
+}
+
+.format-switch-group {
+    display: flex;
+    gap: 0.35rem;
+    background-color: var(--solar-base03);
+    padding: 0.25rem;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+}
+
+.format-label {
+    padding: 0.35rem 0.75rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    border-radius: var(--radius-sm);
+    color: var(--solar-base0);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.format-label:hover {
+    color: var(--solar-base2);
+}
+
+
+
+.link-input-group {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.link-input {
+    flex: 1;
+    background-color: var(--bg-input);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 0.75rem 1rem;
+    color: var(--solar-cyan);
+    font-family: var(--font-mono);
+    font-size: 0.9rem;
+    outline: none;
+    transition: border-color var(--transition-fast);
+}
+
+.link-input:focus {
+    border-color: var(--solar-yellow);
+    box-shadow: 0 0 10px rgba(181, 137, 0, 0.25);
+}
+
+/* Recent Uploads Queue */
+.recent-uploads {
+    margin-top: 2.5rem;
+    padding-top: 1.75rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.recent-uploads-title {
+    font-size: 1.05rem;
+    color: var(--solar-base2);
+    margin-bottom: 1rem;
+}
+
+.upload-queue-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.upload-queue-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1rem;
+    background-color: var(--solar-base03);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    gap: 1rem;
+}
+
+.upload-queue-info {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+}
+
+.upload-queue-thumb {
+    width: 44px;
+    height: 44px;
+    border-radius: var(--radius-sm);
+    object-fit: cover;
+    border: 1px solid var(--border-color);
+}
+
+.upload-queue-name {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--solar-base2);
+}
+
+/* ==========================================================================
+   GALLERY PAGE (Toolbar & Cards Grid)
+   ========================================================================== */
+.gallery-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.75rem;
+    padding: 0.85rem 1.25rem;
+    background-color: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+}
+
+.gallery-stats {
+    font-size: 0.9rem;
+    color: var(--solar-cyan);
+    font-weight: 600;
+}
+
+.gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.5rem;
+    width: 100%;
+}
+
+.gallery-card {
+    background-color: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    transition: all var(--transition-normal);
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    scroll-margin-top: 90px;
+}
+
+.gallery-empty-card {
+    grid-column: 1 / -1;
+    width: 100%;
+}
+
+.gallery-card-preview {
+    position: relative;
+    aspect-ratio: 4 / 3;
+    background-color: var(--solar-base03);
+    overflow: hidden;
+    display: block;
+    z-index: 1;
+    cursor: pointer;
+}
+
+.gallery-card-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform var(--transition-normal);
+}
+
+/* Реакция только при наведении на превью изображения */
+.gallery-card-preview:hover .gallery-card-img {
+    transform: scale(1.06);
+}
+
+.gallery-card-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 43, 54, 0.65);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity var(--transition-fast);
+    z-index: 2;
+}
+
+.gallery-card-preview:hover .gallery-card-overlay {
+    opacity: 1;
+}
+
+.gallery-overlay-btn {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background-color: var(--solar-yellow);
+    color: var(--solar-base03);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+    transform: scale(0.85);
+    transition: transform var(--transition-fast);
+}
+
+.gallery-card-preview:hover .gallery-overlay-btn {
+    transform: scale(1);
+}
+
+/* Реакция только при наведении на тело карточки */
+.gallery-card-body {
+    padding: 1.15rem;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    z-index: 10;
+    background-color: var(--bg-surface);
+    border-top: 1px solid var(--border-color);
+    transition: background-color var(--transition-normal), border-color var(--transition-normal);
+}
+
+.gallery-card-body:hover {
+    background-color: var(--bg-surface-hover);
+    border-top-color: var(--solar-cyan);
+}
+
+.gallery-card-name {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--solar-base2);
+    margin-bottom: 0.25rem;
+}
+
+.gallery-card-url {
+    font-size: 0.78rem;
+    font-family: var(--font-mono);
+    color: var(--solar-cyan);
+    margin-bottom: 1rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.gallery-card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-top: auto;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--border-color);
+    position: relative;
+    z-index: 15;
+}
+
+.gallery-action-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.4rem 0.75rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    border-radius: var(--radius-sm);
+    background-color: var(--solar-base03);
+    color: var(--solar-base0);
+    border: 1px solid var(--border-color);
+    text-decoration: none;
+    transition: all var(--transition-fast);
+    position: relative;
+    z-index: 20;
+    cursor: pointer;
+    touch-action: manipulation;
+}
+
+.gallery-action-btn:hover {
+    color: var(--solar-yellow);
+    border-color: var(--solar-yellow);
+    background-color: var(--bg-surface-alt);
+}
+
+.gallery-action-btn:active {
+    transform: scale(0.96);
+}
+
+/* ==========================================================================
+   LIGHTBOX MODALS (Pure CSS :target + Bootstrap Compatible)
+   ========================================================================== */
+.lightbox-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+}
+
+.lightbox-modal:target {
+    display: flex;
+    animation: fadeIn 0.25s ease forwards;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+.lightbox-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 43, 54, 0.88);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+
+.lightbox-content {
+    position: relative;
+    z-index: 10;
+    max-width: 800px;
+    width: 100%;
+    background-color: var(--bg-modal);
+    border: 1px solid var(--solar-yellow);
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+    box-shadow: var(--shadow-lg), 0 0 35px var(--accent-glow);
+}
+
+.lightbox-close-btn {
+    position: absolute;
+    top: 1rem;
+    right: 1.25rem;
+    z-index: 20;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: rgba(0, 43, 54, 0.8);
+    border: 1px solid var(--border-color);
+    color: transparent;
+    font-size: 0;
+    line-height: 0;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transform-origin: center;
+    transition: transform var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.lightbox-close-btn::before,
+.lightbox-close-btn::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 16px;
+    height: 2px;
+    background-color: var(--solar-base2);
+    border-radius: 1px;
+    transition: background-color var(--transition-fast);
+}
+
+.lightbox-close-btn::before {
+    transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.lightbox-close-btn::after {
+    transform: translate(-50%, -50%) rotate(-45deg);
+}
+
+.lightbox-close-btn:hover {
+    border-color: var(--solar-yellow);
+    box-shadow: 0 0 12px var(--accent-glow);
+    transform: rotate(90deg);
+}
+
+.lightbox-close-btn:hover::before,
+.lightbox-close-btn:hover::after {
+    background-color: var(--solar-yellow);
+}
+
+.lightbox-img {
+    width: 100%;
+    max-height: 70vh;
+    object-fit: contain;
+    background-color: #001f27;
+    display: block;
+}
+
+.lightbox-caption {
+    padding: 1rem 1.5rem;
+    font-weight: 700;
+    color: var(--solar-base2);
+    font-size: 1.05rem;
+    background-color: var(--solar-base02);
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+/* ==========================================================================
+   FOOTER (Bootswatch Solar Style)
+   ========================================================================== */
+.site-footer {
+    margin-top: auto;
+    background-color: var(--solar-base02);
+    border-top: 1px solid var(--border-color);
+    padding: 2rem 1.5rem;
+    font-size: 0.9rem;
+    color: var(--solar-base0);
+}
+
+.footer-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.footer-container strong {
+    color: var(--solar-yellow);
+}
+
+.footer-solar-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    color: var(--solar-cyan);
+    font-weight: 600;
+    font-size: 0.85rem;
+}
+
+/* ==========================================================================
+   RESPONSIVE ADJUSTMENTS
+   ========================================================================== */
+@media (max-width: 1200px) {
+    .app-container-gallery {
+        max-width: 980px;
+    }
+
+    .gallery-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1.25rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .header-container {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .hero-title {
+        font-size: 2.2rem;
+    }
+
+    .hero-subtitle {
+        font-size: 1rem;
+    }
+
+    .features-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .footer-container {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .gallery-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+
+    .gallery-card {
+        width: 100%;
+        max-width: 100%;
+    }
+
+    .showcase-grid {
+        justify-content: center;
+    }
+
+    .showcase-item {
+        width: 160px;
+        flex: 0 0 160px;
+    }
+}
+
+@media (max-width: 520px) {
+    .gallery-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ==========================================================================
+   TABLES & PAGINATION — BOOTSWATCH SOLAR THEME (SERVER 2.0)
+   ========================================================================== */
+.table-responsive {
+    width: 100%;
+    overflow-x: auto;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    margin-bottom: 1.5rem;
+}
+
+.solar-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.95rem;
+    text-align: left;
+}
+
+.solar-table th {
+    background-color: var(--solar-base03);
+    color: var(--text-heading);
+    font-weight: 600;
+    padding: 1rem 1.25rem;
+    border-bottom: 2px solid var(--border-color);
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    white-space: nowrap;
+}
+
+.solar-table td {
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-primary);
+    vertical-align: middle;
+}
+
+.solar-table tbody tr {
+    transition: background-color var(--transition-fast);
+}
+
+.solar-table tbody tr:hover {
+    background-color: var(--bg-surface-hover);
+}
+
+.table-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--solar-cyan);
+    text-decoration: none;
+    font-weight: 500;
+    transition: color var(--transition-fast);
+}
+
+.table-link:hover {
+    color: var(--accent-primary-hover);
+    text-decoration: underline;
+}
+
+.table-link code {
+    font-family: var(--font-mono);
+    font-size: 0.88rem;
+    background: rgba(0, 0, 0, 0.25);
+    padding: 0.2rem 0.45rem;
+    border-radius: var(--radius-sm);
+    color: var(--solar-cyan);
+    word-break: break-all;
+    overflow-wrap: anywhere;
+}
+
+.solar-table th.col-filename,
+.solar-table td.col-filename {
+    max-width: 220px;
+    min-width: 150px;
+    word-break: break-all;
+    overflow-wrap: anywhere;
+    white-space: normal;
+}
+
+.solar-table th.col-orig-name,
+.solar-table td.col-orig-name {
+    max-width: 260px;
+    min-width: 170px;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    word-wrap: break-word;
+    white-space: normal;
+}
+
+.orig-filename-text {
+    display: inline-block;
+    max-width: 100%;
+    font-weight: 500;
+    color: var(--text-bright);
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    word-wrap: break-word;
+    line-height: 1.4;
+}
+
+.solar-table th.col-size,
+.solar-table td.col-size,
+.solar-table th.col-date,
+.solar-table td.col-date,
+.solar-table th.col-type,
+.solar-table td.col-type,
+.solar-table th.col-action,
+.solar-table td.col-action {
+    white-space: nowrap;
+    width: 1%;
+}
+
+.solar-table th.col-action,
+.solar-table td.col-action {
+    text-align: right;
+    min-width: 110px;
+}
+
+.btn-text-mobile-extra {
+    display: none;
+}
+
+.badge-size {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+    padding: 0.28rem 0.65rem;
+    font-size: 0.85rem;
+    font-family: var(--font-mono);
+    font-weight: 600;
+    line-height: 1.2;
+    border-radius: var(--radius-full);
+    background-color: rgba(38, 139, 210, 0.15);
+    color: var(--solar-blue);
+    border: 1px solid rgba(38, 139, 210, 0.35);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.badge-type {
+    display: inline-block;
+    padding: 0.2rem 0.5rem;
+    font-size: 0.78rem;
+    font-family: var(--font-mono);
+    font-weight: 700;
+    border-radius: var(--radius-sm);
+    background-color: rgba(181, 137, 0, 0.15);
+    color: var(--solar-yellow);
+    border: 1px solid rgba(181, 137, 0, 0.3);
+    text-transform: uppercase;
+}
+
+.btn-sm {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.85rem;
+    gap: 0.35rem;
+}
+
+.btn-danger {
+    background-color: var(--solar-magenta);
+    color: #fff;
+    border: 1px solid transparent;
+}
+
+.btn-danger:hover {
+    background-color: var(--accent-danger-hover);
+    box-shadow: 0 0 12px rgba(211, 54, 130, 0.4);
+    color: #fff;
+}
+
+.btn-outline {
+    background-color: transparent;
+    color: var(--solar-base1);
+    border: 1px solid var(--border-color);
+}
+
+.btn-outline:hover:not(.disabled) {
+    background-color: var(--bg-surface-hover);
+    color: var(--text-bright);
+    border-color: var(--solar-yellow);
+}
+
+.btn.disabled,
+.btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    pointer-events: none;
+    box-shadow: none;
+}
+
+.pagination-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+    padding: 1rem 0;
+    margin-top: 1rem;
+}
+
+.pagination-info {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+}
+
+.pagination-info strong {
+    color: var(--text-bright);
+    font-family: var(--font-mono);
+}
+
+.pagination-buttons {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.empty-state-card {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: var(--bg-card);
+    border: 1px dashed var(--border-color);
+    border-radius: var(--radius-lg);
+    margin: 2rem 0;
+}
+
+.empty-state-icon {
+    width: 64px;
+    height: 64px;
+    margin: 0 auto 1.5rem;
+    color: var(--solar-base01);
+    opacity: 0.7;
+}
+
+.empty-state-title {
+    font-size: 1.4rem;
+    color: var(--text-bright);
+    margin-bottom: 0.5rem;
+}
+
+.empty-state-text {
+    color: var(--text-muted);
+    max-width: 420px;
+    margin: 0 auto 1.5rem;
+}
+
+.alert-solar {
+    padding: 1rem 1.25rem;
+    border-radius: var(--radius-md);
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-weight: 500;
+}
+
+.alert-solar-success {
+    background-color: rgba(42, 161, 152, 0.15);
+    border: 1px solid rgba(42, 161, 152, 0.4);
+    color: var(--solar-cyan);
+}
+
+.alert-solar-danger {
+    background-color: rgba(220, 50, 47, 0.15);
+    border: 1px solid rgba(220, 50, 47, 0.4);
+    color: var(--solar-red);
+}
+
+/* --- About Page Profile Photo --- */
+.about-avatar-container {
+    display: inline-block;
+    position: relative;
+}
+
+.about-img {
+    max-width: 340px;
+    /* Максимальная ширина (можете поставить 240px, 300px и т.д.) */
+    width: 100%;
+    /* Адаптивно сжимается на смартфонах */
+    height: auto;
+    /* Сохраняет реальные пропорции фото (не сплющивает и не обрезает) */
+    border-radius: var(--radius-lg, 16px);
+    /* Красивые скругленные углы вместо круга */
+    border: 3px solid var(--solar-cyan);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45), 0 0 20px var(--accent-glow);
+    display: block;
+    transition: transform var(--transition-normal), border-color var(--transition-normal), box-shadow var(--transition-normal);
+}
+
+.about-img:hover {
+    transform: scale(1.05);
+    border-color: var(--solar-yellow);
+    box-shadow: 0 14px 36px rgba(0, 0, 0, 0.6), 0 0 25px rgba(181, 137, 0, 0.4);
+}
