@@ -1,5 +1,4 @@
 from pathlib import Path
-import datetime
 import io
 import uuid
 from PIL import Image
@@ -71,17 +70,3 @@ def get_stored_images(storage_dir):
     items.sort(key=lambda x: x["time"], reverse=True)
 
     return items
-
-
-def format_datetime(val):
-    """Форматирует дату"""
-
-    if isinstance(val, datetime.datetime):
-        return val.strftime("%Y-%m-%d %H:%M:%S")
-
-    try:
-        number = float(val)
-        date = datetime.datetime.fromtimestamp(number)
-        return date.strftime("%Y-%m-%d %H:%M:%S")
-    except:
-        return str(val)
