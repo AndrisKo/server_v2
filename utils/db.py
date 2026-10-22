@@ -30,35 +30,16 @@ def get_db_connection():
 def init_db():
     """Создаёт таблицу images, если её ещё нет."""
     query = """
-            CREATE TABLE IF NOT EXISTS images
-            (
-                id
-                SERIAL
-                PRIMARY
-                KEY,
-                filename
-                TEXT
-                NOT
-                NULL,
-                original_name
-                TEXT
-                NOT
-                NULL,
-                size
-                INTEGER
-                NOT
-                NULL,
-                upload_time
-                TIMESTAMP
-                DEFAULT
-                CURRENT_TIMESTAMP,
-                file_type
-                TEXT
-                NOT
-                NULL
-            );
-            CREATE INDEX IF NOT EXISTS idx_images_upload_time ON images(upload_time DESC); \
-            """
+    CREATE TABLE IF NOT EXISTS images (
+        id SERIAL PRIMARY KEY,
+        filename TEXT NOT NULL,
+        original_name TEXT NOT NULL,
+        size INTEGER NOT NULL,
+        upload_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        file_type TEXT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_images_upload_time ON images(upload_time DESC);
+    """
     try:
         with get_db_connection() as conn:
             with conn.cursor() as cur:
