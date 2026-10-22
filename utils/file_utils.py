@@ -48,25 +48,3 @@ def validate_image(contents: bytes, filename: str):
     ext = {"JPEG": ".jpg", "PNG": ".png", "GIF": ".gif"}[fmt]
     return True, f"{uuid.uuid4().hex}{ext}", ""
 
-
-def get_stored_images(storage_dir):
-    """Возвращает список сохраненных изображений, отсортированных по времени."""
-    storage_path = Path(storage_dir)
-
-    if not storage_path.exists():
-        return []
-
-    items = []
-
-    for item in storage_path.iterdir():
-        if item.is_file() and is_allowed_file(item.name):
-            file_info = {
-                "name": item.name,
-                "size": item.stat().st_size,
-                "time": item.stat().st_mtime,
-            }
-            items.append(file_info)
-
-    items.sort(key=lambda x: x["time"], reverse=True)
-
-    return items
