@@ -17,7 +17,7 @@ logging.basicConfig(
 )
 
 def log_action(action, message=""):
-    """Запись действия в системный журнал app.log и вывод в терминал."""
+    """Запись действия в системный журнал app.log"""
 
     line = f"{action}: {message}" if message else str(action)
     logging.info(line)
