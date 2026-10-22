@@ -95,3 +95,33 @@ def save_image_metadata(filename, original_name, size, file_type):
             new_id = int(res[0])
         conn.commit()
         return new_id
+
+def get_images_page(page=1, page_size=10):
+    """Возвращает список картинок для страницы и общее количество."""
+    # Защита от неправильного номера страницы
+    if page < 1:
+        page = 1
+
+    offset = (page - 1) * page_size
+
+    query = """
+        SELECT id, filename, original_name, size,
+               ROUND(size / 1024.0, 1) AS size_kb,
+               TO_CHAR(upload_time, 'YYYY-MM-DD HH24:MI:SS') AS upload_time,
+               file_type
+        FROM images
+        ORDER BY id DESC
+        LIMIT %s OFFSET %s
+    """
+
+    with get_db_connection() as conn:
+        with conn.cursor(row_factory=dict_row) as cur:
+            # Считаем общее количество
+            cur.execute("SELECT COUNT(*) AS total FROM images")
+            total = cur.fetchone()["total"]
+
+            # Берём нужную страницу
+            cur.execute(query, (page_size, offset))
+            images = cur.fetchall()
+
+    return images, total
