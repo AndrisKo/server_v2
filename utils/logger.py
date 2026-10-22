@@ -16,16 +16,10 @@ logging.basicConfig(
     ],
 )
 
-logger = logging.getLogger(__name__)
-
-
 def log_action(action, message=""):
     """Запись действия в системный журнал app.log и вывод в терминал."""
 
     line = f"{action}: {message}" if message else str(action)
-    logger.info(line)
+    logging.info(line)
 
 
-if __name__ == "__main__":
-    log_action("Тест", "Логер работает отлично!")
-    log_action("Перезагрузка")
