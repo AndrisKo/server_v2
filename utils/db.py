@@ -80,6 +80,7 @@ def save_image_metadata(filename, original_name, size, file_type):
 def get_images_page(page=1, page_size=10):
     """Возвращает список картинок для страницы и общее количество."""
     # Защита от неправильного номера страницы
+    page = int(page)
     if page < 1:
         page = 1
 
@@ -98,8 +99,9 @@ def get_images_page(page=1, page_size=10):
     with get_db_connection() as conn:
         with conn.cursor(row_factory=dict_row) as cur:
             # Считаем общее количество
-            cur.execute("SELECT COUNT(*) AS total FROM images")
-            total = cur.fetchone()["total"]
+            cur.execute("SELECT COUNT(*) AS total FROM images;")
+            row = cur.fetchone()
+            total = row["total"] if row else 0
 
             # Берём нужную страницу
             cur.execute(query, (page_size, offset))
