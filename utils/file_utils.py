@@ -16,8 +16,11 @@ MIME_TYPES = {
 
 def is_allowed_file(filename: str) -> bool:
     """Проверка допустимости расширения файла"""
-    ext = Path(filename).suffix.lstrip(".").lower()
-    return ext in ALLOWED_EXTENSIONS
+    # расширение без точки и маленькими буквами, например "png"
+    ext = Path(filename).suffix.replace(".", "").lower()
+    if ext in ALLOWED_EXTENSIONS:
+        return True
+    return False
 
 
 def get_content_type(filename: str) -> str:
@@ -36,16 +39,29 @@ def validate_image(contents: bytes, filename: str):
     if not is_allowed_file(filename):
         return False, "", f"неподдерживаемый формат файла ({filename})"
 
+    # открываем картинку через Pillow и проверяем что она не битая
     try:
         img = Image.open(io.BytesIO(contents))
         img.verify()
-        fmt = (img.format or "").upper()
+        fmt = img.format
     except Exception:
         return False, "", "повреждённый файл изображения"
 
-    if fmt not in ("JPEG", "PNG", "GIF"):
+    if fmt is None:
+        fmt = ""
+    fmt = fmt.upper()
+
+    # расширение берём по настоящему формату файла, а не по имени
+    if fmt == "JPEG":
+        ext = ".jpg"
+    elif fmt == "PNG":
+        ext = ".png"
+    elif fmt == "GIF":
+        ext = ".gif"
+    else:
         return False, "", f"неподдерживаемый формат файла ({fmt})"
 
-    ext = {"JPEG": ".jpg", "PNG": ".png", "GIF": ".gif"}[fmt]
-    return True, f"{uuid.uuid4().hex}{ext}", ""
+    # новое случайное имя файла, чтобы файлы не перезаписывали друг друга
+    new_filename = uuid.uuid4().hex + ext
+    return True, new_filename, ""
 

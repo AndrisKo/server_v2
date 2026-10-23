@@ -11,8 +11,12 @@ load_dotenv()
 
 def get_db_connection():
     """Подключение к базе данных PostgreSQL."""
-    port_val = os.environ.get("POSTGRES_PORT", 5488)
-    port = int(port_val) if port_val and str(port_val).isdigit() else 5488
+    # порт берём из .env, если там что-то не то - используем 5488
+    port = os.environ.get("POSTGRES_PORT", "5488")
+    if port.isdigit():
+        port = int(port)
+    else:
+        port = 5488
     return psycopg.connect(
         dbname=os.environ.get("POSTGRES_DB"),
         user=os.environ.get("POSTGRES_USER"),
@@ -66,12 +70,12 @@ def save_image_metadata(filename, original_name, size, file_type):
     with get_db_connection() as conn:
         with conn.cursor() as cur:
             cur.execute(query, (filename, original_name, size, file_type))
-            res = cur.fetchone()
-            if not res:
+            result = cur.fetchone()
+            if result is None:
                 raise RuntimeError("Не удалось получить ID созданной записи")
-            new_id = int(res[0])
+            new_id = result[0]
         conn.commit()
-        return new_id
+    return new_id
 
 def get_images_page(page=1, page_size=10):
     """Возвращает список картинок для страницы и общее количество."""
@@ -97,7 +101,10 @@ def get_images_page(page=1, page_size=10):
             # Считаем общее количество
             cur.execute("SELECT COUNT(*) AS total FROM images;")
             row = cur.fetchone()
-            total = row["total"] if row else 0
+            if row:
+                total = row["total"]
+            else:
+                total = 0
 
             # Берём нужную страницу
             cur.execute(query, (page_size, offset))
@@ -107,28 +114,37 @@ def get_images_page(page=1, page_size=10):
 
 def delete_image_by_id(image_id):
     """Удаление записи об изображении из базы данных по id."""
+    # id должен быть числом
     try:
-        clean_id = int(image_id)
+        image_id = int(image_id)
     except (ValueError, TypeError):
         return None
 
     with get_db_connection() as conn:
         with conn.cursor() as cur:
-            cur.execute("DELETE FROM images WHERE id = %s RETURNING filename;", (clean_id,))
+            cur.execute("DELETE FROM images WHERE id = %s RETURNING filename;", (image_id,))
             row = cur.fetchone()
         conn.commit()
-        return str(row[0]) if row else None
+
+    # если такой записи не было - возвращаем None
+    if row is None:
+        return None
+    return str(row[0])
 
 def get_image_by_id(image_id):
     """Поиск информации об изображении по id."""
+    # id должен быть числом
     try:
-        clean_id = int(image_id)
+        image_id = int(image_id)
     except (ValueError, TypeError):
         return None
 
     query = "SELECT id, filename, original_name, size, TO_CHAR(upload_time, 'YYYY-MM-DD HH24:MI:SS') AS upload_time, file_type FROM images WHERE id = %s;"
     with get_db_connection() as conn:
         with conn.cursor(row_factory=dict_row) as cur:
-            cur.execute(query, (clean_id,))
+            cur.execute(query, (image_id,))
             row = cur.fetchone()
-        return dict(row) if row else None
+
+    if row is None:
+        return None
+    return dict(row)
