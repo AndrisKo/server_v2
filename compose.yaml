@@ -1,0 +1,57 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: ${DB_CONTAINER}
+    restart: always
+    env_file:
+      - .env
+    environment:
+      PGPORT: ${POSTGRES_PORT}
+    command: ["postgres", "-p", "${POSTGRES_PORT}"]
+    ports:
+      - "127.0.0.1:${POSTGRES_PORT}:${POSTGRES_PORT}"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 3s
+      timeout: 3s
+      retries: 5
+
+  app:
+    build: .
+    container_name: ${APP_CONTAINER}
+    restart: always
+    env_file:
+      - .env
+    environment:
+      - PORT=8000
+      - POSTGRES_HOST=db
+    volumes:
+      - images:/images
+      - ./logs:/app/logs
+      - ./backups:/backups
+      - ./static:/app/static:ro
+      - ./templates:/app/templates:ro
+      - ./app.py:/app/app.py
+      - ./utils:/app/utils:ro
+    depends_on:
+      db:
+        condition: service_healthy
+
+  nginx:
+    image: nginx:alpine
+    container_name: ${NGINX_CONTAINER}
+    restart: always
+    ports:
+      - "${PORT}:8088"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./static:/static:ro
+      - images:/images:ro
+    depends_on:
+      - app
+
+volumes:
+  images:
+  db_data:

@@ -1,5 +1,4 @@
 import os
-import time
 import psycopg
 from psycopg.rows import dict_row
 from utils.logger import log_action
@@ -8,21 +7,18 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# Настройки подключения к PostgreSQL из переменных окружения
-POSTGRES_DB = os.environ.get("POSTGRES_DB")
-POSTGRES_USER = os.environ.get("POSTGRES_USER")
-POSTGRES_PASSWORD = os.environ.get("POSTGRES_PASSWORD")
-POSTGRES_PORT = int(os.environ.get("POSTGRES_PORT", 5488))
 
 
 def get_db_connection():
     """Подключение к базе данных PostgreSQL."""
+    port_val = os.environ.get("POSTGRES_PORT", 5488)
+    port = int(port_val) if port_val and str(port_val).isdigit() else 5488
     return psycopg.connect(
-        dbname=POSTGRES_DB,
-        user=POSTGRES_USER,
-        password=POSTGRES_PASSWORD,
+        dbname=os.environ.get("POSTGRES_DB"),
+        user=os.environ.get("POSTGRES_USER"),
+        password=os.environ.get("POSTGRES_PASSWORD"),
         host=os.environ.get("POSTGRES_HOST", "localhost"),
-        port=POSTGRES_PORT,
+        port=port,
         connect_timeout=3,
     )
 
@@ -64,16 +60,16 @@ def get_stored_images(storage_dir=None):
 def save_image_metadata(filename, original_name, size, file_type):
     """Сохранение информации о загруженном файле в таблицу images."""
     query = """
-            INSERT INTO images (filename, original_name, size, file_type)
-            VALUES (%s, %s, %s, %s) RETURNING id; \
-            """
+        INSERT INTO images (filename, original_name, size, file_type)
+        VALUES (%s, %s, %s, %s) RETURNING id;
+    """
     with get_db_connection() as conn:
         with conn.cursor() as cur:
             cur.execute(query, (filename, original_name, size, file_type))
             res = cur.fetchone()
             if not res:
                 raise RuntimeError("Не удалось получить ID созданной записи")
-            new_id = int(res[0]) if res else None
+            new_id = int(res[0])
         conn.commit()
         return new_id
 
@@ -111,18 +107,28 @@ def get_images_page(page=1, page_size=10):
 
 def delete_image_by_id(image_id):
     """Удаление записи об изображении из базы данных по id."""
+    try:
+        clean_id = int(image_id)
+    except (ValueError, TypeError):
+        return None
+
     with get_db_connection() as conn:
         with conn.cursor() as cur:
-            cur.execute("DELETE FROM images WHERE id = %s RETURNING filename;", (int(image_id),))
+            cur.execute("DELETE FROM images WHERE id = %s RETURNING filename;", (clean_id,))
             row = cur.fetchone()
         conn.commit()
         return str(row[0]) if row else None
 
 def get_image_by_id(image_id):
     """Поиск информации об изображении по id."""
+    try:
+        clean_id = int(image_id)
+    except (ValueError, TypeError):
+        return None
+
     query = "SELECT id, filename, original_name, size, TO_CHAR(upload_time, 'YYYY-MM-DD HH24:MI:SS') AS upload_time, file_type FROM images WHERE id = %s;"
     with get_db_connection() as conn:
         with conn.cursor(row_factory=dict_row) as cur:
-            cur.execute(query, (int(image_id),))
+            cur.execute(query, (clean_id,))
             row = cur.fetchone()
         return dict(row) if row else None

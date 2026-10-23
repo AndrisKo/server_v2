@@ -16,7 +16,8 @@ MIME_TYPES = {
 
 def is_allowed_file(filename: str) -> bool:
     """Проверка допустимости расширения файла"""
-    return Path(filename).suffix in ALLOWED_EXTENSIONS
+    ext = Path(filename).suffix.lstrip(".").lower()
+    return ext in ALLOWED_EXTENSIONS
 
 
 def get_content_type(filename: str) -> str:
