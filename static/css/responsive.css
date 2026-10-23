@@ -479,6 +479,7 @@
     }
 
     .solar-table td.col-action .btn-delete-row,
+    .solar-table td.col-action .btn-locked,
     .solar-table td.col-action .btn {
         width: 100% !important;
         display: inline-flex !important;

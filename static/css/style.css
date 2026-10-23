@@ -1567,6 +1567,29 @@ pre {
     box-shadow: none;
 }
 
+.btn-locked {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    padding: 0.4rem 0.8rem;
+    font-size: 0.82rem;
+    font-weight: 500;
+    line-height: 1.2;
+    border-radius: var(--radius-sm);
+    background-color: rgba(101, 123, 131, 0.12);
+    color: var(--solar-base1);
+    border: 1px solid rgba(101, 123, 131, 0.25);
+    cursor: not-allowed;
+    user-select: none;
+    white-space: nowrap;
+}
+
+.btn-locked svg {
+    flex-shrink: 0;
+    opacity: 0.85;
+}
+
 .pagination-bar {
     display: flex;
     align-items: center;
