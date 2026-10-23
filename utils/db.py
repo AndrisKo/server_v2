@@ -36,9 +36,11 @@ def init_db():
         original_name TEXT NOT NULL,
         size INTEGER NOT NULL,
         upload_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        file_type TEXT NOT NULL
+        file_type TEXT NOT NULL,
+        uploader_ip TEXT
     );
     CREATE INDEX IF NOT EXISTS idx_images_upload_time ON images(upload_time DESC);
+    ALTER TABLE images ADD COLUMN IF NOT EXISTS uploader_ip TEXT;
     """
     try:
         with get_db_connection() as conn:
@@ -61,16 +63,16 @@ def get_stored_images(storage_dir=None):
             return cur.fetchall()
 
 
-def save_image_metadata(filename, original_name, size, file_type, conn=None):
+def save_image_metadata(filename, original_name, size, file_type, uploader_ip=None, conn=None):
     """Сохранение информации о загруженном файле в таблицу images."""
     query = """
-        INSERT INTO images (filename, original_name, size, file_type)
-        VALUES (%s, %s, %s, %s) RETURNING id;
+        INSERT INTO images (filename, original_name, size, file_type, uploader_ip)
+        VALUES (%s, %s, %s, %s, %s) RETURNING id;
     """
     # если подключение уже передали (для пачки картинок) — используем его
     if conn is not None:
         with conn.cursor() as cur:
-            cur.execute(query, (filename, original_name, size, file_type))
+            cur.execute(query, (filename, original_name, size, file_type, uploader_ip))
             result = cur.fetchone()
             if result is None:
                 raise RuntimeError("Не удалось получить ID созданной записи")
@@ -79,7 +81,7 @@ def save_image_metadata(filename, original_name, size, file_type, conn=None):
     # если вызов одиночный — открываем своё подключение и коммитим
     with get_db_connection() as new_conn:
         with new_conn.cursor() as cur:
-            cur.execute(query, (filename, original_name, size, file_type))
+            cur.execute(query, (filename, original_name, size, file_type, uploader_ip))
             result = cur.fetchone()
             if result is None:
                 raise RuntimeError("Не удалось получить ID созданной записи")
@@ -100,7 +102,7 @@ def get_images_page(page=1, page_size=10):
         SELECT id, filename, original_name, size,
                ROUND(size / 1024.0, 1) AS size_kb,
                TO_CHAR(upload_time, 'YYYY-MM-DD HH24:MI:SS') AS upload_time,
-               file_type
+               file_type, uploader_ip
         FROM images
         ORDER BY id DESC
         LIMIT %s OFFSET %s
@@ -122,21 +124,29 @@ def get_images_page(page=1, page_size=10):
 
     return images, total
 
-def delete_image_by_id(image_id):
-    """Удаление записи об изображении из базы данных по id."""
+def delete_image_by_id(image_id, client_ip=None):
+    """Удаление записи об изображении из базы данных по id (только если совпадает IP)."""
     # id должен быть числом
     try:
         image_id = int(image_id)
     except (ValueError, TypeError):
         return None
 
+    # Если передан IP — удаляем только если совпадает IP автора (или для старых картинок без IP)
+    if client_ip is not None:
+        query = "DELETE FROM images WHERE id = %s AND (uploader_ip = %s OR uploader_ip IS NULL) RETURNING filename;"
+        params = (image_id, client_ip)
+    else:
+        query = "DELETE FROM images WHERE id = %s RETURNING filename;"
+        params = (image_id,)
+
     with get_db_connection() as conn:
         with conn.cursor() as cur:
-            cur.execute("DELETE FROM images WHERE id = %s RETURNING filename;", (image_id,))
+            cur.execute(query, params)
             row = cur.fetchone()
         conn.commit()
 
-    # если такой записи не было - возвращаем None
+    # если такой записи не было (или IP чужой) - возвращаем None
     if row is None:
         return None
     return str(row[0])

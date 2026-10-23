@@ -180,6 +180,7 @@
                                 <span class="badge-type">{{ img.file_type | upper }}</span>
                             </td>
                             <td class="col-action" data-label="Действие">
+                                {% if img.uploader_ip == current_ip or not img.uploader_ip %}
                                 <form action="/delete/{{ img.id }}" method="post" style="display: block; width: 100%;">
                                     <button type="submit" class="btn btn-sm btn-danger btn-delete-row"
                                         title="Удалить запись из БД и стереть файл"
@@ -194,6 +195,9 @@
                                         <span>Удалить<span class="btn-text-mobile-extra"> изображение</span></span>
                                     </button>
                                 </form>
+                                {% else %}
+                                <span style="color: var(--text-muted); font-size: 0.82rem; white-space: nowrap;">Чужой файл</span>
+                                {% endif %}
                             </td>
                         </tr>
                         {% endfor %}

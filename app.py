@@ -53,6 +53,11 @@ def is_browser_request(request):
         return False
 
 
+def get_client_ip(request: Request):
+    """Узнаёт реальный IP-адрес пользователя."""
+    return request.headers.get("x-real-ip") or (request.client.host if request.client else "127.0.0.1")
+
+
 @app.get("/", response_class=HTMLResponse)
 def index(request: Request):
     """Главная страница с приветствием и информацией о сервисе."""
@@ -126,16 +131,15 @@ async def upload_file(request: Request, images: list[UploadFile] | None = File(N
 
     saved_items = []
     errors = []
+    client_ip = get_client_ip(request)
 
     # Открываем ОДНО подключение к базе данных на всю пачку файлов
     try:
         with db.get_db_connection() as conn:
 
             for upload in all_files:
-                # читаем файл, но не больше 5 МБ + 1 байт (чтобы огромный файл не занял всю память)
                 contents = await upload.read(file_utils.MAX_UPLOAD_SIZE + 1)
 
-                # 1. проверяем файл (размер до 5 МБ, расширение и Pillow)
                 valid, new_filename, error_text = file_utils.validate_image(contents, upload.filename)
                 if not valid:
                     logger.log_action("Ошибка", error_text)
@@ -154,9 +158,9 @@ async def upload_file(request: Request, images: list[UploadFile] | None = File(N
                     # тип файла = расширение без точки (png, jpg, gif)
                     file_type = new_filename.split(".")[-1]
 
-                    # передаём открытое соединение conn=conn, чтобы не подключаться к базе заново
+                    # передаём открытое соединение conn=conn и IP автора картинки
                     record_id = db.save_image_metadata(
-                        new_filename, original_name, len(contents), file_type, conn=conn
+                        new_filename, original_name, len(contents), file_type, uploader_ip=client_ip, conn=conn
                     )
 
                     saved_items.append({
@@ -286,6 +290,7 @@ def images_list(request: Request, page: int = 1, deleted=None, error=None):
         name="images_list.html",
         context={
             "images": items,
+            "current_ip": get_client_ip(request),
             "current_page": page,
             "total_pages": total_pages,
             "total_count": total,
@@ -304,9 +309,10 @@ def images_list(request: Request, page: int = 1, deleted=None, error=None):
 def delete_image(request: Request, image_id: int):
     """Удаление изображения из базы данных и файлового хранилища."""
     is_browser = is_browser_request(request)
+    client_ip = get_client_ip(request)
 
     try:
-        deleted_filename = db.delete_image_by_id(image_id)
+        deleted_filename = db.delete_image_by_id(image_id, client_ip=client_ip)
 
         if deleted_filename:
             # удаляем сам файл с диска
@@ -314,17 +320,17 @@ def delete_image(request: Request, image_id: int):
             if file_path.exists():
                 file_path.unlink()
 
-            logger.log_action("Успех", f"изображение {deleted_filename} (id={image_id}) удалено.")
+            logger.log_action("Успех", f"изображение {deleted_filename} (id={image_id}) удалено пользователем {client_ip}.")
             if is_browser:
                 return RedirectResponse("/images-list?deleted=1", status_code=303)
             return JSONResponse({"success": True, "message": f"Изображение {deleted_filename} удалено", "id": image_id})
 
         else:
-            logger.log_action("Ошибка", f"изображение id={image_id} не найдено для удаления")
-            message = "Изображение не найдено"
+            logger.log_action("Ошибка", f"попытка удаления id={image_id} (не найдено или чужой IP {client_ip})")
+            message = "Изображение не найдено или у вас нет прав на его удаление"
             if is_browser:
                 return RedirectResponse("/images-list?error=" + urllib.parse.quote(message), status_code=303)
-            return JSONResponse({"success": False, "error": message}, status_code=404)
+            return JSONResponse({"success": False, "error": message}, status_code=403)
 
     except Exception as e:
         # текст ошибки пишем только в лог, пользователю показываем простое сообщение
