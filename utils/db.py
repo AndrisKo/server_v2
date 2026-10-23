@@ -117,3 +117,12 @@ def delete_image_by_id(image_id):
             row = cur.fetchone()
         conn.commit()
         return str(row[0]) if row else None
+
+def get_image_by_id(image_id):
+    """Поиск информации об изображении по id."""
+    query = "SELECT id, filename, original_name, size, TO_CHAR(upload_time, 'YYYY-MM-DD HH24:MI:SS') AS upload_time, file_type FROM images WHERE id = %s;"
+    with get_db_connection() as conn:
+        with conn.cursor(row_factory=dict_row) as cur:
+            cur.execute(query, (int(image_id),))
+            row = cur.fetchone()
+        return dict(row) if row else None

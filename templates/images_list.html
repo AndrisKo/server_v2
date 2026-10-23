@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="ru" data-bs-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PixelVault — Список изображений (PostgreSQL Registry)</title>
+    <meta name="description"
+        content="Структурированный реестр загруженных изображений из PostgreSQL: оригинальные имена, размеры, форматы, даты и возможность удаления.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Source+Sans+3:ital,wght@0,300;0,400;0,600;0,700;0,800;1,400&display=swap"
+        rel="stylesheet" media="print" onload="this.media='all'">
+    <noscript>
+        <link
+            href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Source+Sans+3:ital,wght@0,300;0,400;0,600;0,700;0,800;1,400&display=swap"
+            rel="stylesheet">
+    </noscript>
+    <link rel="stylesheet" href="/static/css/reset.css">
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="/static/css/responsive.css">
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+</head>
+
+<body>
+    <div class="page-wrapper">
+        <!-- Site Header / Navbar (Solar Theme) -->
+        <header class="site-header">
+            <div class="header-container">
+                <a href="/" class="brand">
+                    <div class="brand-icon-wrapper">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="5"></circle>
+                            <line x1="12" y1="1" x2="12" y2="3"></line>
+                            <line x1="12" y1="21" x2="12" y2="23"></line>
+                            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                            <line x1="1" y1="12" x2="3" y2="12"></line>
+                            <line x1="21" y1="12" x2="23" y2="12"></line>
+                            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                        </svg>
+                    </div>
+                    <span class="brand-text">PixelVault</span>
+                </a>
+
+                <nav class="nav-links">
+                    <a href="/" class="nav-link">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.2">
+                            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                            <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                        </svg>
+                        <span>Начало</span>
+                    </a>
+                    <a href="/upload" class="nav-link">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="17 8 12 3 7 8"></polyline>
+                            <line x1="12" y1="3" x2="12" y2="15"></line>
+                        </svg>
+                        <span>Загрузка</span>
+                    </a>
+                    <a href="/images" class="nav-link">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.2">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                            <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                            <polyline points="21 15 16 10 5 21"></polyline>
+                        </svg>
+                        <span>Галерея</span>
+                    </a>
+                    <a href="/images-list" class="nav-link active">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.2">
+                            <line x1="8" y1="6" x2="21" y2="6"></line>
+                            <line x1="8" y1="12" x2="21" y2="12"></line>
+                            <line x1="8" y1="18" x2="21" y2="18"></line>
+                            <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                            <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                            <line x1="3" y1="18" x2="3.01" y2="18"></line>
+                        </svg>
+                        <span>Список<span class="nav-text-extra"> файлов</span></span>
+                    </a>
+                </nav>
+
+                <div class="header-actions">
+                    <div class="theme-pill-badge" title="Об авторе проекта">
+                        <a href="/about">Обо мне</a>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="gallery-page-container"
+            style="max-width: 1200px; margin: 0 auto; padding: 2.5rem 1.5rem; width: 100%;">
+            <!-- Header Section -->
+            <div style="margin-bottom: 2rem;">
+                <div class="hero-tag" style="margin-bottom: 0.75rem;">
+                    <span class="hero-tag-dot"></span>
+                    <span>PostgreSQL Реестр &bull; Сервер картинок 2.0</span>
+                </div>
+                <h1 style="color: var(--text-bright); font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem;">
+                    Список загруженных изображений
+                </h1>
+                <p style="color: var(--text-muted); font-size: 1.05rem;">
+                    Полные метаданные из базы данных: оригинальные имена, точный размер, даты загрузки и управление
+                    файлами.
+                </p>
+            </div>
+
+            <!-- Alerts -->
+            {% if deleted %}
+            <div class="alert-solar alert-solar-success">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+                <span>Изображение успешно удалено из базы данных и файлового хранилища.</span>
+            </div>
+            {% endif %}
+
+            {% if error %}
+            <div class="alert-solar alert-solar-danger">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                </svg>
+                <span>{{ error }}</span>
+            </div>
+            {% endif %}
+
+            <!-- Table or Empty State -->
+            {% if images and images|length > 0 %}
+            <div class="table-responsive">
+                <table class="solar-table">
+                    <thead>
+                        <tr>
+                            <th class="col-filename">Имя файла</th>
+                            <th class="col-orig-name">Оригинальное имя</th>
+                            <th class="col-size">Размер (КБ)</th>
+                            <th class="col-date">Дата загрузки</th>
+                            <th class="col-type">Тип файла</th>
+                            <th class="col-action" style="text-align: right;">Действие</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for img in images %}
+                        <tr>
+                            <td class="col-filename" data-label="Имя файла">
+                                <a href="/images/{{ img.filename }}" target="_blank" class="table-link"
+                                    title="Открыть изображение в полном размере">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2">
+                                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                                        <polyline points="15 3 21 3 21 9"></polyline>
+                                        <line x1="10" y1="14" x2="21" y2="3"></line>
+                                    </svg>
+                                    <code>{{ img.filename }}</code>
+                                </a>
+                            </td>
+                            <td class="col-orig-name" data-label="Оригинал">
+                                <span class="orig-filename-text" title="{{ img.original_name }}">{{ img.original_name
+                                    }}</span>
+                            </td>
+                            <td class="col-size" data-label="Размер">
+                                <span class="badge-size">{{ img.size_kb }}&nbsp;КБ</span>
+                            </td>
+                            <td class="col-date" data-label="Дата">
+                                <span class="date-text"
+                                    style="font-family: var(--font-mono); color: var(--solar-base1); font-size: 0.9rem; white-space: nowrap;">
+                                    {{ img.upload_time }}
+                                </span>
+                            </td>
+                            <td class="col-type" data-label="Тип файла">
+                                <span class="badge-type">{{ img.file_type | upper }}</span>
+                            </td>
+                            <td class="col-action" data-label="Действие">
+                                <form action="/delete/{{ img.id }}" method="post" style="display: block; width: 100%;">
+                                    <button type="submit" class="btn btn-sm btn-danger btn-delete-row"
+                                        title="Удалить запись из БД и стереть файл"
+                                        onclick="return confirm('Удалить изображение?');">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2">
+                                            <polyline points="3 6 5 6 21 6"></polyline>
+                                            <path
+                                                d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2">
+                                            </path>
+                                        </svg>
+                                        <span>Удалить<span class="btn-text-mobile-extra"> изображение</span></span>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination Bar -->
+            <div class="pagination-bar">
+                <div class="pagination-info">
+                    Страница <strong>{{ current_page }}</strong> из <strong>{{ total_pages }}</strong>
+                    &bull; Всего файлов: <strong>{{ total_count }}</strong>
+                </div>
+
+                <div class="pagination-buttons">
+                    {% if has_prev %}
+                    <a href="/images-list?page={{ prev_page }}" class="btn btn-outline">
+                        &larr; Предыдущая страница
+                    </a>
+                    {% else %}
+                    <span class="btn btn-outline disabled" aria-disabled="true">
+                        &larr; Предыдущая страница
+                    </span>
+                    {% endif %}
+
+                    {% if has_next %}
+                    <a href="/images-list?page={{ next_page }}" class="btn btn-outline">
+                        Следующая страница &rarr;
+                    </a>
+                    {% else %}
+                    <span class="btn btn-outline disabled" aria-disabled="true">
+                        Следующая страница &rarr;
+                    </span>
+                    {% endif %}
+                </div>
+            </div>
+
+            {% else %}
+            <!-- Empty State per ТЗ -->
+            <div class="empty-state-card">
+                <svg class="empty-state-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                    <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                    <polyline points="21 15 16 10 5 21"></polyline>
+                </svg>
+                <h2 class="empty-state-title">Нет загруженных изображений</h2>
+                <p class="empty-state-text">
+                    База данных PostgreSQL пока не содержит записей. Загрузите ваше первое изображение, чтобы оно
+                    появилось в реестре.
+                </p>
+                <a href="/upload" class="btn btn-primary">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="17 8 12 3 7 8"></polyline>
+                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                    </svg>
+                    <span>Загрузить изображение</span>
+                </a>
+            </div>
+            {% endif %}
+        </main>
+    </div>
+</body>
+
+</html>
