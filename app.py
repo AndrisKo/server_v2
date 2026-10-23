@@ -17,22 +17,11 @@ from utils import db, file_utils, logger
 
 load_dotenv()
 
-# папка проекта (где лежит app.py)
 BASE_DIR = Path(__file__).resolve().parent
 
-# папка для картинок, берём из .env
+# Папка для картинок (в Docker Compose это примонтированный том /images)
 STORAGE_DIR = Path(os.environ.get("STORAGE_DIR", "images"))
-
-# пробуем создать папку и записать туда тестовый файл
-# если не получилось (например на маке нет доступа к /images) - сохраняем в папку images в проекте
-try:
-    STORAGE_DIR.mkdir(parents=True, exist_ok=True)
-    test_file = STORAGE_DIR / ".check_perm"
-    test_file.touch()
-    test_file.unlink()
-except Exception:
-    STORAGE_DIR = BASE_DIR / "images"
-    STORAGE_DIR.mkdir(parents=True, exist_ok=True)
+STORAGE_DIR.mkdir(parents=True, exist_ok=True)
 
 TEMPLATES_DIR = BASE_DIR / "templates"
 STATIC_DIR = BASE_DIR / "static"
