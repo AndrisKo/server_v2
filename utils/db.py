@@ -73,7 +73,7 @@ def save_image_metadata(filename, original_name, size, file_type):
             res = cur.fetchone()
             if not res:
                 raise RuntimeError("Не удалось получить ID созданной записи")
-            new_id = int(res[0])
+            new_id = int(res[0]) if res else None
         conn.commit()
         return new_id
 
@@ -108,3 +108,12 @@ def get_images_page(page=1, page_size=10):
             images = cur.fetchall()
 
     return images, total
+
+def delete_image_by_id(image_id):
+    """Удаление записи об изображении из базы данных по id."""
+    with get_db_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute("DELETE FROM images WHERE id = %s RETURNING filename;", (int(image_id),))
+            row = cur.fetchone()
+        conn.commit()
+        return str(row[0]) if row else None
