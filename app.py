@@ -127,44 +127,64 @@ async def upload_file(request: Request, images: list[UploadFile] | None = File(N
     saved_items = []
     errors = []
 
-    for upload in all_files:
-        # читаем файл, но не больше 5 МБ + 1 байт (чтобы огромный файл не занял всю память)
-        contents = await upload.read(file_utils.MAX_UPLOAD_SIZE + 1)
+    # Открываем ОДНО подключение к базе данных на всю пачку файлов
+    try:
+        with db.get_db_connection() as conn:
 
-        # 1. проверяем файл (размер до 5 МБ, расширение и Pillow)
-        valid, new_filename, error_text = file_utils.validate_image(contents, upload.filename)
-        if not valid:
-            logger.log_action("Ошибка", error_text)
-            errors.append(error_text)
-            continue
+            for upload in all_files:
+                # читаем файл, но не больше 5 МБ + 1 байт (чтобы огромный файл не занял всю память)
+                contents = await upload.read(file_utils.MAX_UPLOAD_SIZE + 1)
 
-        # 2. сохраняем файл на диск и записываем информацию в базу
-        save_path = STORAGE_DIR / new_filename
-        try:
-            save_path.write_bytes(contents)
+                # 1. проверяем файл (размер до 5 МБ, расширение и Pillow)
+                valid, new_filename, error_text = file_utils.validate_image(contents, upload.filename)
+                if not valid:
+                    logger.log_action("Ошибка", error_text)
+                    errors.append(error_text)
+                    continue
 
-            original_name = Path(upload.filename).name
-            if original_name == "":
-                original_name = "image"
+                # 2. сохраняем файл на диск и записываем информацию в базу
+                save_path = STORAGE_DIR / new_filename
+                try:
+                    save_path.write_bytes(contents)
 
-            # тип файла = расширение без точки (png, jpg, gif)
-            file_type = new_filename.split(".")[-1]
+                    original_name = Path(upload.filename).name
+                    if original_name == "":
+                        original_name = "image"
 
-            record_id = db.save_image_metadata(new_filename, original_name, len(contents), file_type)
+                    # тип файла = расширение без точки (png, jpg, gif)
+                    file_type = new_filename.split(".")[-1]
 
-            saved_items.append({
-                "id": record_id,
-                "filename": new_filename,
-                "url": "/images/" + new_filename,
-            })
-            logger.log_action("Успех", f"изображение {new_filename} загружено.")
+                    # передаём открытое соединение conn=conn, чтобы не подключаться к базе заново
+                    record_id = db.save_image_metadata(
+                        new_filename, original_name, len(contents), file_type, conn=conn
+                    )
 
-        except Exception as e:
-            # если в базу записать не получилось - удаляем файл, чтобы не было мусора
-            if save_path.exists():
-                save_path.unlink()
-            logger.log_action("Ошибка", f"сбой сохранения метаданных в базе данных ({e})")
-            errors.append("сбой сохранения метаданных в базе данных")
+                    saved_items.append({
+                        "id": record_id,
+                        "filename": new_filename,
+                        "url": "/images/" + new_filename,
+                    })
+                    logger.log_action("Успех", f"изображение {new_filename} загружено.")
+
+                except Exception as e:
+                    # если в базу записать не получилось - удаляем файл, чтобы не было мусора
+                    if save_path.exists():
+                        save_path.unlink()
+                    logger.log_action("Ошибка", f"сбой сохранения метаданных в базе данных ({e})")
+                    errors.append("сбой сохранения метаданных в базе данных")
+
+            # В конце цикла один раз фиксируем все записи в базе
+            conn.commit()
+
+    except Exception as e:
+        # если подключение к базе упало совсем — удаляем с диска все файлы, которые успели записать
+        for item in saved_items:
+            path_to_clean = STORAGE_DIR / item["filename"]
+            if path_to_clean.exists():
+                path_to_clean.unlink()
+        saved_items.clear()
+        logger.log_action("Ошибка", f"сбой подключения к базе данных ({e})")
+        errors.append("сбой сохранения метаданных в базе данных")
 
     # ни один файл не сохранился
     if len(saved_items) == 0:

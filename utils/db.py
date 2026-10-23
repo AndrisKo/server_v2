@@ -61,20 +61,30 @@ def get_stored_images(storage_dir=None):
             return cur.fetchall()
 
 
-def save_image_metadata(filename, original_name, size, file_type):
+def save_image_metadata(filename, original_name, size, file_type, conn=None):
     """Сохранение информации о загруженном файле в таблицу images."""
     query = """
         INSERT INTO images (filename, original_name, size, file_type)
         VALUES (%s, %s, %s, %s) RETURNING id;
     """
-    with get_db_connection() as conn:
+    # если подключение уже передали (для пачки картинок) — используем его
+    if conn is not None:
         with conn.cursor() as cur:
             cur.execute(query, (filename, original_name, size, file_type))
             result = cur.fetchone()
             if result is None:
                 raise RuntimeError("Не удалось получить ID созданной записи")
+            return result[0]
+
+    # если вызов одиночный — открываем своё подключение и коммитим
+    with get_db_connection() as new_conn:
+        with new_conn.cursor() as cur:
+            cur.execute(query, (filename, original_name, size, file_type))
+            result = cur.fetchone()
+            if result is None:
+                raise RuntimeError("Не удалось получить ID созданной записи")
             new_id = result[0]
-        conn.commit()
+        new_conn.commit()
     return new_id
 
 def get_images_page(page=1, page_size=10):
