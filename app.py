@@ -24,8 +24,9 @@ STORAGE_DIR.mkdir(parents=True, exist_ok=True)
 
 TEMPLATES_DIR = BASE_DIR / "templates"
 STATIC_DIR = BASE_DIR / "static"
-HOST = os.environ.get("HOST", "localhost")
-PORT = int(os.environ.get("PORT", 8088))
+HOST = os.environ.get("HOST", "0.0.0.0")
+PORT = int(os.environ.get("PORT", 8000))
+
 
 MAX_FILES_PER_REQUEST = 20
 
