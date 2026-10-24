@@ -25,7 +25,6 @@
 
 <body>
     <div class="page-wrapper">
-        <!-- Site Header / Navbar (Solar Theme) -->
         <header class="site-header">
             <div class="header-container">
                 <a href="/" class="brand">
@@ -95,9 +94,7 @@
             </div>
         </header>
 
-        <!-- Main Content -->
         <main class="app-container app-container-gallery">
-            <!-- Page Title & Tabs -->
             <div class="page-header">
                 <h1 class="page-title">
                     <span>Галерея изображений</span>
@@ -195,7 +192,6 @@
                 {% endfor %}
             </div>
 
-            <!-- Pagination Bar (Solar Theme, per images_list design) -->
             {% if total_pages is defined and total_pages > 1 %}
             <div class="pagination-bar" style="margin-top: 2rem;">
                 <div class="pagination-info">
@@ -229,7 +225,6 @@
         </main>
     </div>
 
-    <!-- Pure CSS Lightbox Modals -->
     {% for img in images %}
     <div id="modal-img-{{ loop.index0 }}" class="lightbox-modal">
         <a href="#card-img-{{ loop.index0 }}" class="lightbox-backdrop"
