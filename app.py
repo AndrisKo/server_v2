@@ -25,8 +25,8 @@ STORAGE_DIR.mkdir(parents=True, exist_ok=True)
 
 TEMPLATES_DIR = BASE_DIR / "templates"
 STATIC_DIR = BASE_DIR / "static"
-HOST = os.environ.get("HOST", "0.0.0.0")
-PORT = int(os.environ.get("PORT", 8000))
+HOST = os.environ.get("HOST")
+PORT = int(os.environ.get("PORT", 8088))
 
 
 @asynccontextmanager
@@ -44,19 +44,9 @@ app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 templates = Jinja2Templates(directory=TEMPLATES_DIR)
 
 
-def is_browser_request(request):
-    """Проверяет, пришёл запрос из браузера или нет (например из curl или скрипта)."""
-    accept = request.headers.get("accept", "")
-    if "text/html" in accept:
-        return True
-    else:
-        return False
-
-
 def get_client_ip(request: Request):
     """Узнаёт реальный IP-адрес пользователя."""
     return request.headers.get("x-real-ip") or (request.client.host if request.client else "127.0.0.1")
-
 
 @app.get("/", response_class=HTMLResponse)
 def index(request: Request):
@@ -81,7 +71,6 @@ def upload_page(request: Request, uploaded: str | None = None, error: str | None
             if name == "":
                 continue
 
-            # берём только имя файла, чтобы нельзя было передать путь типа ../../
             file_path = STORAGE_DIR / Path(name).name
 
             if file_path.is_file():
@@ -102,11 +91,7 @@ def upload_page(request: Request, uploaded: str | None = None, error: str | None
 @app.post("/upload")
 async def upload_file(request: Request, images: list[UploadFile] | None = File(None)):
     """Загрузка одного или нескольких файлов с валидацией Pillow и сохранением в PostgreSQL."""
-    is_browser = is_browser_request(request)
 
-    # собираем все файлы из формы
-    # ВАЖНО: request.form() возвращает UploadFile из starlette, а не из fastapi,
-    # поэтому проверяем через StarletteUploadFile, иначе файлы не находятся
     all_files = []
     try:
         form = await request.form()
@@ -125,8 +110,6 @@ async def upload_file(request: Request, images: list[UploadFile] | None = File(N
     # файлов нет совсем
     if len(all_files) == 0:
         logger.log_action("Ошибка", "Файл не выбран.")
-        if is_browser:
-            return RedirectResponse("/upload?error=Файл+не+выбран", status_code=303)
         return JSONResponse({"success": False, "error": "Файл не выбран."}, status_code=400)
 
     saved_items = []
@@ -156,7 +139,7 @@ async def upload_file(request: Request, images: list[UploadFile] | None = File(N
                         original_name = "image"
 
                     # тип файла = расширение без точки (png, jpg, gif)
-                    file_type = new_filename.split(".")[-1]
+                    file_type = Path(new_filename).suffix.lstrip(".").lower()
 
                     # передаём открытое соединение conn=conn и IP автора картинки
                     record_id = db.save_image_metadata(
@@ -196,29 +179,13 @@ async def upload_file(request: Request, images: list[UploadFile] | None = File(N
             error_message = "; ".join(errors)
         else:
             error_message = "Не удалось загрузить файлы."
-
-        if is_browser:
-            return RedirectResponse("/upload?error=" + urllib.parse.quote(error_message), status_code=303)
         return JSONResponse({"success": False, "error": error_message}, status_code=400)
 
-    # для браузера - перенаправляем обратно на страницу загрузки и показываем картинки
-    if is_browser:
-        names = []
-        for item in saved_items:
-            names.append(item["filename"])
-        uploaded_param = urllib.parse.quote(",".join(names))
-        return RedirectResponse("/upload?uploaded=" + uploaded_param, status_code=303)
-
-    # для API - возвращаем JSON
-    first = saved_items[0]
-    return {
-        "success": True,
-        "url": first["url"],
-        "filename": first["filename"],
-        "id": first["id"],
-        "files": saved_items,
-        "count": len(saved_items),
-    }
+    names = []
+    for item in saved_items:
+        names.append(item["filename"])
+    uploaded_param = urllib.parse.quote(",".join(names))
+    return RedirectResponse("/upload?uploaded=" + uploaded_param, status_code=303)
 
 
 @app.get("/images", response_class=HTMLResponse)
@@ -308,7 +275,6 @@ def images_list(request: Request, page: int = 1, deleted=None, error=None):
 @app.delete("/delete/{image_id}")
 def delete_image(request: Request, image_id: int):
     """Удаление изображения из базы данных и файлового хранилища."""
-    is_browser = is_browser_request(request)
     client_ip = get_client_ip(request)
 
     try:
@@ -321,23 +287,17 @@ def delete_image(request: Request, image_id: int):
                 file_path.unlink()
 
             logger.log_action("Успех", f"изображение {deleted_filename} (id={image_id}) удалено пользователем {client_ip}.")
-            if is_browser:
-                return RedirectResponse("/images-list?deleted=1", status_code=303)
             return JSONResponse({"success": True, "message": f"Изображение {deleted_filename} удалено", "id": image_id})
 
         else:
             logger.log_action("Ошибка", f"попытка удаления id={image_id} (не найдено или чужой IP {client_ip})")
             message = "Изображение не найдено или у вас нет прав на его удаление"
-            if is_browser:
-                return RedirectResponse("/images-list?error=" + urllib.parse.quote(message), status_code=303)
             return JSONResponse({"success": False, "error": message}, status_code=403)
 
     except Exception as e:
         # текст ошибки пишем только в лог, пользователю показываем простое сообщение
         logger.log_action("Ошибка", f"сбой удаления изображения id={image_id} ({e})")
         message = "Не удалось удалить изображение"
-        if is_browser:
-            return RedirectResponse("/images-list?error=" + urllib.parse.quote(message), status_code=303)
         return JSONResponse({"success": False, "error": message}, status_code=500)
 
 

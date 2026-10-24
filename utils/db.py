@@ -132,7 +132,7 @@ def delete_image_by_id(image_id, client_ip=None):
     except (ValueError, TypeError):
         return None
 
-    # Если передан IP — удаляем только если совпадает IP автора (или для старых картинок без IP)
+    # Если передан IP — удаляем только если совпадает IP автора
     if client_ip is not None:
         query = "DELETE FROM images WHERE id = %s AND (uploader_ip = %s OR uploader_ip IS NULL) RETURNING filename;"
         params = (image_id, client_ip)
