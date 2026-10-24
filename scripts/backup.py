@@ -1,11 +1,3 @@
-#!/usr/bin/env python3
-"""
-Скрипт резервного копирования базы данных PostgreSQL и файлов картинок.
-Создает:
-1. Дамп базы данных: backups/backup_ГГГГ-ММ-ДД_ЧЧММСС.sql
-2. Архив файлов картинок: backups/images_ГГГГ-ММ-ДД_ЧЧММСС.tar.gz
-"""
-
 import os
 import subprocess
 import sys

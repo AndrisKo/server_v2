@@ -1,11 +1,3 @@
-#!/usr/bin/env python3
-"""
-Скрипт восстановления базы данных PostgreSQL и файлов картинок из резервной копии.
-Восстанавливает:
-1. Базу данных из backups/backup_ГГГГ-ММ-ДД_ЧЧММСС.sql
-2. Файлы изображений из backups/images_ГГГГ-ММ-ДД_ЧЧММСС.tar.gz (если архив существует)
-"""
-
 import os
 import subprocess
 import sys
