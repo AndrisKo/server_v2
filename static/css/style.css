@@ -1268,7 +1268,7 @@ pre {
     margin-top: auto;
     background-color: var(--solar-base02);
     border-top: 1px solid var(--border-color);
-    padding: 2rem 1.5rem;
+    padding: 1rem 1.5rem;
     font-size: 0.9rem;
     color: var(--solar-base0);
 }
