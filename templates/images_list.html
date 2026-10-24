@@ -18,8 +18,8 @@
             rel="stylesheet">
     </noscript>
     <link rel="stylesheet" href="/static/css/reset.css">
-    <link rel="stylesheet" href="/static/css/style.css">
-    <link rel="stylesheet" href="/static/css/responsive.css">
+    <link rel="stylesheet" href="/static/css/style.css?v=3">
+    <link rel="stylesheet" href="/static/css/responsive.css?v=2">
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
 </head>
 
@@ -132,6 +132,7 @@
                 <table class="solar-table">
                     <thead>
                         <tr>
+                            <th class="col-thumb">Фото</th>
                             <th class="col-filename">Имя файла</th>
                             <th class="col-orig-name">Оригинальное имя</th>
                             <th class="col-size">Размер (КБ)</th>
@@ -143,15 +144,18 @@
                     <tbody>
                         {% for img in images %}
                         <tr>
+                            <td class="col-thumb" data-label="Фото">
+                                <a href="/images/{{ img.filename }}" target="_blank" class="table-thumb-link"
+                                    title="Открыть оригинал: {{ img.original_name }}"
+                                    style="display: inline-block; width: 36px; height: 36px; min-width: 36px; min-height: 36px; border-radius: 4px; overflow: hidden; vertical-align: middle; border: 1px solid var(--border-color); background-color: var(--solar-base03);">
+                                    <img src="/images/{{ img.filename }}" alt="{{ img.original_name }}" class="table-thumb-img"
+                                        width="36" height="36" loading="lazy"
+                                        style="width: 36px; height: 36px; min-width: 36px; min-height: 36px; max-width: 36px; max-height: 36px; object-fit: cover; display: block;">
+                                </a>
+                            </td>
                             <td class="col-filename" data-label="Имя файла">
                                 <a href="/images/{{ img.filename }}" target="_blank" class="table-link"
                                     title="Открыть изображение в полном размере">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                        stroke-width="2">
-                                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
-                                        <polyline points="15 3 21 3 21 9"></polyline>
-                                        <line x1="10" y1="14" x2="21" y2="3"></line>
-                                    </svg>
                                     <code>{{ img.filename }}</code>
                                 </a>
                             </td>

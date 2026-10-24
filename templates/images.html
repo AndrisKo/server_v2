@@ -192,8 +192,8 @@
                 {% endfor %}
             </div>
 
-            {% if total_pages is defined and total_pages > 1 %}
-            <div class="pagination-bar" style="margin-top: 2rem;">
+            {% if images and images|length > 0 %}
+            <div class="pagination-bar" style="margin-top: 2rem; margin-bottom: 2rem;">
                 <div class="pagination-info">
                     Страница <strong>{{ current_page }}</strong> из <strong>{{ total_pages }}</strong>
                     &bull; Всего файлов: <strong>{{ total_count }}</strong>

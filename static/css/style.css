@@ -1447,6 +1447,52 @@ pre {
     overflow-wrap: anywhere;
 }
 
+.solar-table th.col-thumb,
+.solar-table td.col-thumb {
+    width: 72px;
+    min-width: 72px;
+    max-width: 72px;
+    text-align: left;
+    padding: 0.6rem 0.5rem 0.6rem 1.25rem;
+    vertical-align: middle;
+}
+
+.table-thumb-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    min-height: 36px;
+    max-width: 36px;
+    max-height: 36px;
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    vertical-align: middle;
+    border: 1px solid var(--border-color);
+    background-color: var(--solar-base03);
+    transition: transform var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.table-thumb-link:hover {
+    transform: scale(1.2);
+    border-color: var(--solar-yellow);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+    z-index: 2;
+}
+
+.table-thumb-img {
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px !important;
+    min-height: 36px !important;
+    max-width: 36px !important;
+    max-height: 36px !important;
+    object-fit: cover !important;
+    display: block;
+}
+
 .solar-table th.col-filename,
 .solar-table td.col-filename {
     max-width: 220px;
