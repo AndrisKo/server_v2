@@ -345,6 +345,9 @@ pre {
     font-weight: 700;
     border: 1px solid rgba(181, 137, 0, 0.4);
 }
+.theme-pill-badge span {
+    color: var(--solar-base2);
+}
 
 /* ==========================================================================
    BUTTONS (Bootswatch Solar)
