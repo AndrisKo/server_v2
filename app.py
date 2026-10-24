@@ -28,6 +28,8 @@ STATIC_DIR = BASE_DIR / "static"
 HOST = os.environ.get("HOST")
 PORT = int(os.environ.get("PORT", 8088))
 
+MAX_FILES_PER_REQUEST = 20
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -42,6 +44,7 @@ app = FastAPI(title="PixelVault Image Hosting", lifespan=lifespan)
 
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 templates = Jinja2Templates(directory=TEMPLATES_DIR)
+
 
 
 def get_client_ip(request: Request):
@@ -87,106 +90,104 @@ def upload_page(request: Request, uploaded: str | None = None, error: str | None
         context={"uploaded_files": files, "error": error},
     )
 
-
 @app.post("/upload")
-async def upload_file(request: Request, images: list[UploadFile] | None = File(None)):
-    """Загрузка одного или нескольких файлов с валидацией Pillow и сохранением в PostgreSQL."""
-
-    all_files = []
-    try:
-        form = await request.form()
-        for key, value in form.multi_items():
-            if isinstance(value, StarletteUploadFile) and value.filename:
-                all_files.append(value)
-    except Exception:
-        all_files = []
-
-    # если в форме ничего не нашли - пробуем взять файлы из параметра images
-    if len(all_files) == 0 and images:
-        for f in images:
-            if isinstance(f, StarletteUploadFile) and f.filename:
-                all_files.append(f)
-
-    # файлов нет совсем
-    if len(all_files) == 0:
-        logger.log_action("Ошибка", "Файл не выбран.")
-        return JSONResponse({"success": False, "error": "Файл не выбран."}, status_code=400)
-
+def upload_file(
+    request: Request,
+    images: list[UploadFile] | None = File(None),
+):
+    """Загрузка изображений в потоке ThreadPool: валидация Pillow, сохранение на диск и savepoint в PostgreSQL."""
+    # 1. Отсеиваем пустую отправку формы браузером
+    actual_images = [img for img in images if img.filename] if images else []
+    if not actual_images:
+        return RedirectResponse(
+            f"/upload?error={urllib.parse.quote('Файл не выбран.')}",
+            status_code=303,
+        )
+    # 2. Ограничение количества файлов
+    if len(actual_images) > MAX_FILES_PER_REQUEST:
+        message = f"Можно загрузить не более {MAX_FILES_PER_REQUEST} файлов за один раз."
+        return RedirectResponse(
+            f"/upload?error={urllib.parse.quote(message)}",
+            status_code=303,
+        )
+    client_ip = get_client_ip(request)
     saved_items = []
     errors = []
-    client_ip = get_client_ip(request)
-
-    # Открываем ОДНО подключение к базе данных на всю пачку файлов
     try:
         with db.get_db_connection() as conn:
-
-            for upload in all_files:
-                contents = await upload.read(file_utils.MAX_UPLOAD_SIZE + 1)
-
-                valid, new_filename, error_text = file_utils.validate_image(contents, upload.filename)
-                if not valid:
-                    logger.log_action("Ошибка", error_text)
-                    errors.append(error_text)
-                    continue
-
-                # 2. сохраняем файл на диск и записываем информацию в базу
-                save_path = STORAGE_DIR / new_filename
+            for upload in actual_images:
+                raw_filename = upload.filename or "image"
                 try:
-                    save_path.write_bytes(contents)
-
-                    original_name = Path(upload.filename).name
-                    if original_name == "":
-                        original_name = "image"
-
-                    # тип файла = расширение без точки (png, jpg, gif)
-                    file_type = Path(new_filename).suffix.lstrip(".").lower()
-
-                    # передаём открытое соединение conn=conn и IP автора картинки
-                    record_id = db.save_image_metadata(
-                        new_filename, original_name, len(contents), file_type, uploader_ip=client_ip, conn=conn
+                    # Чтение с ограничением по размеру
+                    contents = upload.file.read(file_utils.MAX_UPLOAD_SIZE + 1)
+                    valid, new_filename, error_text = file_utils.validate_image(
+                        contents,
+                        raw_filename,
                     )
-
-                    saved_items.append({
-                        "id": record_id,
-                        "filename": new_filename,
-                        "url": "/images/" + new_filename,
-                    })
-                    logger.log_action("Успех", f"изображение {new_filename} загружено.")
-
-                except Exception as e:
-                    # если в базу записать не получилось - удаляем файл, чтобы не было мусора
-                    if save_path.exists():
-                        save_path.unlink()
-                    logger.log_action("Ошибка", f"сбой сохранения метаданных в базе данных ({e})")
-                    errors.append("сбой сохранения метаданных в базе данных")
-
-            # В конце цикла один раз фиксируем все записи в базе
+                    if not valid:
+                        message = f"{raw_filename}: {error_text}"
+                        logger.log_action("Ошибка", message)
+                        errors.append(message)
+                        continue
+                    # 3. Сохранение на диск ДО транзакции БД
+                    save_path = STORAGE_DIR / new_filename
+                    save_path.write_bytes(contents)
+                    # 4. Savepoint в БД (psycopg 3)
+                    try:
+                        with conn.transaction():
+                            original_name = Path(raw_filename).name or "image"
+                            file_type = Path(new_filename).suffix.lstrip(".").lower()
+                            record_id = db.save_image_metadata(
+                                new_filename,
+                                original_name,
+                                len(contents),
+                                file_type,
+                                uploader_ip=client_ip,
+                                conn=conn,
+                            )
+                            saved_items.append({
+                                "id": record_id,
+                                "filename": new_filename,
+                                "url": f"/images/{new_filename}",
+                            })
+                            logger.log_action("Успех", f"изображение {new_filename} загружено.")
+                    except Exception as db_error:
+                        # Если запись в БД упала — откатываем файл с диска
+                        if save_path.exists():
+                            save_path.unlink()
+                        message = f"{raw_filename}: сбой сохранения в базе данных"
+                        logger.log_action("Ошибка", f"{message} ({db_error})")
+                        errors.append(message)
+                except Exception as file_error:
+                    message = f"{raw_filename}: не удалось обработать файл"
+                    logger.log_action("Ошибка", f"{message} ({file_error})")
+                    errors.append(message)
+                finally:
+                    upload.file.close()
+            # Фиксируем все успешно прошедшие savepoint'ы
             conn.commit()
-
-    except Exception as e:
-        # если подключение к базе упало совсем — удаляем с диска все файлы, которые успели записать
+    except Exception as db_error:
+        # При отказе всего соединения / коммита очищаем всё, что успели сохранить
         for item in saved_items:
-            path_to_clean = STORAGE_DIR / item["filename"]
-            if path_to_clean.exists():
-                path_to_clean.unlink()
+            cleanup_path = STORAGE_DIR / item["filename"]
+            if cleanup_path.exists():
+                cleanup_path.unlink()
         saved_items.clear()
-        logger.log_action("Ошибка", f"сбой подключения к базе данных ({e})")
-        errors.append("сбой сохранения метаданных в базе данных")
-
-    # ни один файл не сохранился
-    if len(saved_items) == 0:
-        if len(errors) > 0:
-            error_message = "; ".join(errors)
-        else:
-            error_message = "Не удалось загрузить файлы."
-        return JSONResponse({"success": False, "error": error_message}, status_code=400)
-
-    names = []
-    for item in saved_items:
-        names.append(item["filename"])
-    uploaded_param = urllib.parse.quote(",".join(names))
-    return RedirectResponse("/upload?uploaded=" + uploaded_param, status_code=303)
-
+        errors.append("Критический сбой базы данных при сохранении")
+        logger.log_action("Ошибка", f"критический сбой транзакции БД ({db_error})")
+    # 5. Обработка результатов и редирект
+    if not saved_items:
+        message = "; ".join(errors) if errors else "Не удалось загрузить файлы."
+        return RedirectResponse(
+            f"/upload?error={urllib.parse.quote(message)}",
+            status_code=303,
+        )
+    names = [item["filename"] for item in saved_items]
+    redirect_url = f"/upload?uploaded={urllib.parse.quote(','.join(names))}"
+    if errors:
+        warning = "Некоторые файлы пропущены: " + "; ".join(errors)
+        redirect_url += f"&error={urllib.parse.quote(warning)}"
+    return RedirectResponse(redirect_url, status_code=303)
 
 @app.get("/images", response_class=HTMLResponse)
 @app.get("/images/", response_class=HTMLResponse)
@@ -287,18 +288,18 @@ def delete_image(request: Request, image_id: int):
                 file_path.unlink()
 
             logger.log_action("Успех", f"изображение {deleted_filename} (id={image_id}) удалено пользователем {client_ip}.")
-            return JSONResponse({"success": True, "message": f"Изображение {deleted_filename} удалено", "id": image_id})
+            return RedirectResponse("/images-list?deleted=1", status_code=303)
 
         else:
             logger.log_action("Ошибка", f"попытка удаления id={image_id} (не найдено или чужой IP {client_ip})")
             message = "Изображение не найдено или у вас нет прав на его удаление"
-            return JSONResponse({"success": False, "error": message}, status_code=403)
+            return RedirectResponse(f"/images-list?error={urllib.parse.quote(message)}", status_code=303)
 
     except Exception as e:
         # текст ошибки пишем только в лог, пользователю показываем простое сообщение
         logger.log_action("Ошибка", f"сбой удаления изображения id={image_id} ({e})")
         message = "Не удалось удалить изображение"
-        return JSONResponse({"success": False, "error": message}, status_code=500)
+        return RedirectResponse(f"/images-list?error={urllib.parse.quote(message)}", status_code=303)
 
 
 @app.get("/images/{filename}")
