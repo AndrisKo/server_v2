@@ -10,7 +10,6 @@ from fastapi import FastAPI, File, HTTPException, Request, UploadFile
 from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from starlette.datastructures import UploadFile as StarletteUploadFile
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from utils import db, file_utils, logger
@@ -34,7 +33,6 @@ MAX_FILES_PER_REQUEST = 20
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Инициализация базы данных и рабочих каталогов при запуске приложения."""
-    Path("backups").mkdir(parents=True, exist_ok=True)
     STORAGE_DIR.mkdir(parents=True, exist_ok=True)
     db.init_db()
     yield
@@ -46,10 +44,40 @@ app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 templates = Jinja2Templates(directory=TEMPLATES_DIR)
 
 
-
 def get_client_ip(request: Request):
     """Узнаёт реальный IP-адрес пользователя."""
     return request.headers.get("x-real-ip") or (request.client.host if request.client else "127.0.0.1")
+
+
+def upload_error(message):
+    """Возвращает пользователя на страницу загрузки с текстом ошибки."""
+    return RedirectResponse(f"/upload?error={urllib.parse.quote(message)}", status_code=303)
+
+
+def get_page_data(page, per_page):
+    """Берёт одну страницу картинок из БД и считает данные для пагинации."""
+    page = max(page, 1)
+
+    try:
+        items, total = db.get_images_page(page=page, page_size=per_page)
+    except Exception as e:
+        logger.log_action("Ошибка", f"сбой получения изображений из БД ({e})")
+        items, total = [], 0
+
+    # сколько всего страниц (минимум 1)
+    total_pages = max(math.ceil(total / per_page), 1)
+
+    return {
+        "images": items,
+        "current_page": page,
+        "total_pages": total_pages,
+        "total_count": total,
+        "has_prev": page > 1,
+        "has_next": page < total_pages,
+        "prev_page": page - 1,
+        "next_page": page + 1,
+    }
+
 
 @app.get("/", response_class=HTMLResponse)
 def index(request: Request):
@@ -91,189 +119,84 @@ def upload_page(request: Request, uploaded: str | None = None, error: str | None
     )
 
 @app.post("/upload")
-def upload_file(
-    request: Request,
-    images: list[UploadFile] | None = File(None),
-):
+def upload_file(request: Request, images: list[UploadFile] | None = File(None)):
     """Загрузка изображений, сохранение на диск и в PostgreSQL."""
-    # 1. Отсеиваем пустую отправку формы браузером
-    actual_images = [img for img in images if img.filename] if images else []
-    if not actual_images:
-        return RedirectResponse(
-            f"/upload?error={urllib.parse.quote('Файл не выбран.')}",
-            status_code=303,
-        )
-    # 2. Ограничение количества файлов
-    if len(actual_images) > MAX_FILES_PER_REQUEST:
-        message = f"Можно загрузить не более {MAX_FILES_PER_REQUEST} файлов за один раз."
-        return RedirectResponse(
-            f"/upload?error={urllib.parse.quote(message)}",
-            status_code=303,
-        )
+    # 1. Отсеиваем пустые поля формы (браузер шлёт пустой файл, если ничего не выбрано)
+    uploads = [img for img in images or [] if img.filename]
+    if not uploads:
+        return upload_error("Файл не выбран.")
+    if len(uploads) > MAX_FILES_PER_REQUEST:
+        return upload_error(f"Можно загрузить не более {MAX_FILES_PER_REQUEST} файлов за один раз.")
+
     client_ip = get_client_ip(request)
-    saved_items = []
-    errors = []
-    try:
-        with db.get_db_connection() as conn:
-            for upload in actual_images:
-                raw_filename = upload.filename or "image"
-                try:
-                    # Чтение с ограничением по размеру
-                    contents = upload.file.read(file_utils.MAX_UPLOAD_SIZE + 1)
-                    valid, new_filename, error_text = file_utils.validate_image(
-                        contents,
-                        raw_filename,
-                    )
-                    if not valid:
-                        message = f"{raw_filename}: {error_text}"
-                        logger.log_action("Ошибка", message)
-                        errors.append(message)
-                        continue
-                    # 3. Сохранение на диск ДО транзакции БД
-                    save_path = STORAGE_DIR / new_filename
-                    save_path.write_bytes(contents)
-                    # 4. Save в БД
-                    try:
-                        with conn.transaction():
-                            original_name = Path(raw_filename).name or "image"
-                            file_type = Path(new_filename).suffix.lstrip(".").lower()
-                            record_id = db.save_image_metadata(
-                                new_filename,
-                                original_name,
-                                len(contents),
-                                file_type,
-                                uploader_ip=client_ip,
-                                conn=conn,
-                            )
-                            saved_items.append({
-                                "id": record_id,
-                                "filename": new_filename,
-                                "url": f"/images/{new_filename}",
-                            })
-                            logger.log_action("Успех", f"изображение {new_filename} загружено.")
-                    except Exception as db_error:
-                        # Если запись в БД упала — откатываем файл с диска
-                        if save_path.exists():
-                            save_path.unlink()
-                        message = f"{raw_filename}: сбой сохранения в базе данных"
-                        logger.log_action("Ошибка", f"{message} ({db_error})")
-                        errors.append(message)
-                except Exception as file_error:
-                    message = f"{raw_filename}: не удалось обработать файл"
-                    logger.log_action("Ошибка", f"{message} ({file_error})")
-                    errors.append(message)
-                finally:
-                    upload.file.close()
-            # Фиксируем все успешно прошедшие savepoint'ы
-            conn.commit()
-    except Exception as db_error:
-        # При отказе всего соединения / коммита очищаем всё, что успели сохранить
-        for item in saved_items:
-            cleanup_path = STORAGE_DIR / item["filename"]
-            if cleanup_path.exists():
-                cleanup_path.unlink()
-        saved_items.clear()
-        errors.append("Критический сбой базы данных при сохранении")
-        logger.log_action("Ошибка", f"критический сбой транзакции БД ({db_error})")
-    # 5. Обработка результатов и редирект
-    if not saved_items:
-        message = "; ".join(errors) if errors else "Не удалось загрузить файлы."
-        return RedirectResponse(
-            f"/upload?error={urllib.parse.quote(message)}",
-            status_code=303,
-        )
-    names = [item["filename"] for item in saved_items]
-    redirect_url = f"/upload?uploaded={urllib.parse.quote(','.join(names))}"
+    saved = []   # имена сохранённых файлов
+    errors = []  # сообщения об ошибках
+
+    for upload in uploads:
+        name = upload.filename
+
+        # 2. Читаем файл (с ограничением по размеру) и проверяем его
+        contents = upload.file.read(file_utils.MAX_UPLOAD_SIZE + 1)
+        valid, new_filename, error_text = file_utils.validate_image(contents, name)
+        if not valid:
+            message = f"{name}: {error_text}"
+            logger.log_action("Ошибка", message)
+            errors.append(message)
+            continue
+
+        # 3. Сохраняем файл на диск и запись о нём в БД
+        save_path = STORAGE_DIR / new_filename
+        try:
+            save_path.write_bytes(contents)
+            file_type = Path(new_filename).suffix.lstrip(".")
+            with db.get_db_connection() as conn:
+                db.save_image_metadata(conn, new_filename, Path(name).name, len(contents), file_type, client_ip)
+            saved.append(new_filename)
+            logger.log_action("Успех", f"изображение {new_filename} загружено.")
+        except Exception as e:
+            # если что-то пошло не так — удаляем файл с диска, чтобы не оставлять мусор
+            save_path.unlink(missing_ok=True)
+            message = f"{name}: не удалось сохранить файл"
+            logger.log_action("Ошибка", f"{message} ({e})")
+            errors.append(message)
+
+    # 4. Если ничего не сохранилось — показываем ошибки
+    if not saved:
+        return upload_error("; ".join(errors))
+
+    # 5. Показываем загруженные файлы (и предупреждение, если часть пропущена)
+    redirect_url = f"/upload?uploaded={urllib.parse.quote(','.join(saved))}"
     if errors:
         warning = "Некоторые файлы пропущены: " + "; ".join(errors)
         redirect_url += f"&error={urllib.parse.quote(warning)}"
     return RedirectResponse(redirect_url, status_code=303)
 
+
 @app.get("/images", response_class=HTMLResponse)
 @app.get("/images/", response_class=HTMLResponse)
 def gallery(request: Request, page: int = 1):
     """Галерея картинок с пагинацией по 12 элементов."""
-    per_page = 12
-
-    if page < 1:
-        page = 1
-
-    try:
-        items, total = db.get_images_page(page=page, page_size=per_page)
-    except Exception as e:
-        logger.log_action("Ошибка", f"сбой получения изображений из БД ({e})")
-        items = []
-        total = 0
-
-    # сколько всего страниц (минимум 1)
-    total_pages = math.ceil(total / per_page)
-    if total_pages < 1:
-        total_pages = 1
+    context = get_page_data(page, per_page=12)
 
     # шаблону нужно поле name, поэтому добавляем его к каждой картинке
-    images = []
-    for img in items:
-        image = dict(img)
-        image["name"] = img["filename"]
-        images.append(image)
+    for image in context["images"]:
+        image["name"] = image["filename"]
 
-    return templates.TemplateResponse(
-        request=request,
-        name="images.html",
-        context={
-            "images": images,
-            "current_page": page,
-            "total_pages": total_pages,
-            "total_count": total,
-            "has_prev": page > 1,
-            "has_next": page < total_pages,
-            "prev_page": page - 1,
-            "next_page": page + 1,
-        },
-    )
+    return templates.TemplateResponse(request=request, name="images.html", context=context)
 
 
 @app.get("/images-list", response_class=HTMLResponse)
 def images_list(request: Request, page: int = 1, deleted=None, error=None):
     """Реестр всех изображений из базы данных с пагинацией по 10 элементов."""
-    per_page = 10
+    context = get_page_data(page, per_page=10)
+    context["current_ip"] = get_client_ip(request)
+    context["deleted"] = bool(deleted)
+    context["error"] = error
 
-    if page < 1:
-        page = 1
-
-    try:
-        items, total = db.get_images_page(page=page, page_size=per_page)
-    except Exception as e:
-        logger.log_action("Ошибка", f"сбой получения списка изображений из БД ({e})")
-        items = []
-        total = 0
-
-    # сколько всего страниц (минимум 1)
-    total_pages = math.ceil(total / per_page)
-    if total_pages < 1:
-        total_pages = 1
-
-    return templates.TemplateResponse(
-        request=request,
-        name="images_list.html",
-        context={
-            "images": items,
-            "current_ip": get_client_ip(request),
-            "current_page": page,
-            "total_pages": total_pages,
-            "total_count": total,
-            "has_prev": page > 1,
-            "has_next": page < total_pages,
-            "prev_page": page - 1,
-            "next_page": page + 1,
-            "deleted": bool(deleted),
-            "error": error,
-        },
-    )
+    return templates.TemplateResponse(request=request, name="images_list.html", context=context)
 
 
 @app.post("/delete/{image_id}")
-@app.delete("/delete/{image_id}")
 def delete_image(request: Request, image_id: int):
     """Удаление изображения из базы данных и файлового хранилища."""
     client_ip = get_client_ip(request)
