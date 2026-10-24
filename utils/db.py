@@ -7,11 +7,9 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-
-
 def get_db_connection():
     """Подключение к базе данных PostgreSQL."""
-    # порт берём из .env, если там что-то не то - используем 5488
+
     port = os.environ.get("POSTGRES_PORT", "5488")
     if port.isdigit():
         port = int(port)
