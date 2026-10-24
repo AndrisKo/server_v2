@@ -7,7 +7,7 @@ from contextlib import asynccontextmanager
 import uvicorn
 from dotenv import load_dotenv
 from fastapi import FastAPI, File, HTTPException, Request, UploadFile
-from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse
+from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from starlette.datastructures import UploadFile as StarletteUploadFile
@@ -336,7 +336,7 @@ def app_exception_handler(request: Request, exc: Exception):
         detail = None
 
     if code >= 500:
-        # ошибку сервера пишем в лог полностью, а пользователю не показываем подробности
+        # ошибку сервера пишем в лог полностью
         logger.log_action("Ошибка", f"{code} {request.method} {request.url.path} ({exc})")
         detail = "Внутренняя ошибка сервера"
     else:
@@ -344,12 +344,7 @@ def app_exception_handler(request: Request, exc: Exception):
         if detail is None:
             detail = "Ошибка запроса"
 
-    # если просили JSON - отвечаем JSON
-    accept = request.headers.get("accept", "")
-    if "json" in accept or request.url.path.startswith("/api/"):
-        return JSONResponse({"error": str(detail)}, status_code=code)
-
-    # иначе показываем красивую страницу ошибки
+    # всегда показываем красивую страницу ошибки в стиле Solar
     return templates.TemplateResponse(
         request=request,
         name="error.html",
