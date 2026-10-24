@@ -19,7 +19,6 @@ load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent
 
-# Папка для картинок (в Docker Compose это примонтированный том /images)
 STORAGE_DIR = Path(os.environ.get("STORAGE_DIR", "images"))
 STORAGE_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -95,7 +94,7 @@ def upload_file(
     request: Request,
     images: list[UploadFile] | None = File(None),
 ):
-    """Загрузка изображений в потоке ThreadPool: валидация Pillow, сохранение на диск и savepoint в PostgreSQL."""
+    """Загрузка изображений, сохранение на диск и в PostgreSQL."""
     # 1. Отсеиваем пустую отправку формы браузером
     actual_images = [img for img in images if img.filename] if images else []
     if not actual_images:
@@ -132,7 +131,7 @@ def upload_file(
                     # 3. Сохранение на диск ДО транзакции БД
                     save_path = STORAGE_DIR / new_filename
                     save_path.write_bytes(contents)
-                    # 4. Savepoint в БД (psycopg 3)
+                    # 4. Save в БД
                     try:
                         with conn.transaction():
                             original_name = Path(raw_filename).name or "image"
