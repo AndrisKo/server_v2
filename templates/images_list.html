@@ -18,7 +18,7 @@
             rel="stylesheet">
     </noscript>
     <link rel="stylesheet" href="/static/css/reset.css">
-    <link rel="stylesheet" href="/static/css/style.css?v=3">
+    <link rel="stylesheet" href="/static/css/style.css?v=4">
     <link rel="stylesheet" href="/static/css/responsive.css?v=2">
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
 </head>
@@ -177,20 +177,18 @@
                             </td>
                             <td class="col-action" data-label="Действие">
                                 {% if img.uploader_ip == current_ip or not img.uploader_ip %}
-                                <form action="/delete/{{ img.id }}" method="post" style="display: block; width: 100%;">
-                                    <button type="submit" class="btn btn-sm btn-danger btn-delete-row"
-                                        title="Удалить запись из БД и стереть файл"
-                                        onclick="return confirm('Удалить изображение?');">
-                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
-                                            stroke="currentColor" stroke-width="2">
-                                            <polyline points="3 6 5 6 21 6"></polyline>
-                                            <path
-                                                d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2">
-                                            </path>
-                                        </svg>
-                                        <span>Удалить<span class="btn-text-mobile-extra"> изображение</span></span>
-                                    </button>
-                                </form>
+                                <button type="button" class="btn btn-sm btn-danger btn-delete-row"
+                                    title="Удалить запись из БД и стереть файл"
+                                    onclick="openDeleteModal('{{ img.id }}', '{{ img.original_name | escape }}', '/images/{{ img.filename }}', '{{ img.size_kb }}&nbsp;КБ &bull; {{ img.file_type | upper }}')">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                                        stroke="currentColor" stroke-width="2">
+                                        <polyline points="3 6 5 6 21 6"></polyline>
+                                        <path
+                                            d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2">
+                                        </path>
+                                    </svg>
+                                    <span>Удалить<span class="btn-text-mobile-extra"> изображение</span></span>
+                                </button>
                                 {% else %}
                                 <span class="btn-locked" title="Удалить может только автор загрузки">
                                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -260,6 +258,88 @@
             {% endif %}
         </main>
     </div>
+
+    <!-- Solar Themed Delete Confirmation Modal -->
+    <div id="deleteModal" class="solar-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="deleteModalTitle" onclick="handleModalBackdropClick(event)">
+        <div class="solar-modal-dialog" onclick="event.stopPropagation()">
+            <button type="button" class="solar-modal-close" onclick="closeDeleteModal()" aria-label="Закрыть">&times;</button>
+            
+            <div class="solar-modal-header">
+                <div class="solar-modal-icon-badge">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="3 6 5 6 21 6"></polyline>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                        <line x1="10" y1="11" x2="10" y2="17"></line>
+                        <line x1="14" y1="11" x2="14" y2="17"></line>
+                    </svg>
+                </div>
+                <h3 id="deleteModalTitle" class="solar-modal-title">Удалить изображение?</h3>
+                <p class="solar-modal-desc">
+                    Это действие необратимо. Запись будет стёрта из базы данных PostgreSQL, а файл удалён с диска.
+                </p>
+            </div>
+
+            <div class="solar-modal-preview">
+                <img id="deleteModalThumb" src="" alt="Превью" class="solar-modal-preview-thumb">
+                <div class="solar-modal-preview-info">
+                    <span id="deleteModalName" class="solar-modal-preview-name"></span>
+                    <span id="deleteModalMeta" class="solar-modal-preview-meta"></span>
+                </div>
+            </div>
+
+            <form id="deleteModalForm" method="post" action="">
+                <div class="solar-modal-actions">
+                    <button type="button" class="btn btn-outline-solar" onclick="closeDeleteModal()">
+                        Отмена
+                    </button>
+                    <button type="submit" class="btn btn-danger-confirm">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                            <polyline points="3 6 5 6 21 6"></polyline>
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                        </svg>
+                        <span>Удалить фото</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const deleteModal = document.getElementById('deleteModal');
+        const deleteModalForm = document.getElementById('deleteModalForm');
+        const deleteModalThumb = document.getElementById('deleteModalThumb');
+        const deleteModalName = document.getElementById('deleteModalName');
+        const deleteModalMeta = document.getElementById('deleteModalMeta');
+
+        function openDeleteModal(id, originalName, thumbSrc, metaText) {
+            deleteModalForm.action = '/delete/' + id;
+            deleteModalThumb.src = thumbSrc;
+            deleteModalThumb.alt = originalName;
+            deleteModalName.textContent = originalName;
+            deleteModalName.title = originalName;
+            deleteModalMeta.innerHTML = metaText;
+
+            deleteModal.classList.add('is-active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeDeleteModal() {
+            deleteModal.classList.remove('is-active');
+            document.body.style.overflow = '';
+        }
+
+        function handleModalBackdropClick(event) {
+            if (event.target === deleteModal) {
+                closeDeleteModal();
+            }
+        }
+
+        window.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape' && deleteModal && deleteModal.classList.contains('is-active')) {
+                closeDeleteModal();
+            }
+        });
+    </script>
 </body>
 
 </html>
