@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-<!-- suppress HtmlUnknownAttribute, HtmlUnknownTarget -->
 <html lang="ru" data-bs-theme="dark">
 
 <head>
@@ -26,7 +25,6 @@
 
 <body>
     <div class="page-wrapper">
-        <!-- Site Header / Navbar (Solar Theme) -->
         <header class="site-header">
             <div class="header-container">
                 <a href="/" class="brand">
@@ -95,9 +93,7 @@
             </div>
         </header>
 
-        <!-- Main Content -->
         <main class="app-container" style="max-width: 1200px;">
-            <!-- Page Title & Tabs -->
             <div class="page-header">
                 <h1 class="page-title">
                     <span>Загрузка фото</span>
@@ -107,10 +103,8 @@
                 </p>
             </div>
 
-            <!-- Uploader Form Card -->
             <form action="/upload" method="POST" enctype="multipart/form-data" class="upload-card"
                 style="max-width: 860px; margin: 0 auto;">
-                <!-- Styled File Dropzone (Solar Style) -->
                 <div class="dropzone" style="position: relative; overflow: hidden; cursor: pointer;">
                     <input type="file" id="file-upload" name="images" accept="image/jpeg,image/png,image/gif" multiple
                         aria-label="Выберите изображения для загрузки" required onchange="this.form.submit()"
@@ -140,7 +134,6 @@
 
                 <button type="submit" style="display: none;" aria-hidden="true">Загрузить</button>
 
-                <!-- Success Alert -->
                 {% if uploaded_files %}
                 <div class="status-alert-success"
                     style="margin: 1.25rem 0; padding: 1.25rem; border-radius: 8px; background-color: rgba(133, 153, 0, 0.15); border: 1px solid var(--solar-green, #859900); color: var(--solar-base2, #eee8d5); text-align: center;">
@@ -194,7 +187,6 @@
                 </div>
                 {% endif %}
 
-                <!-- Error Alert -->
                 {% if error %}
                 <div class="status-alert-error"
                     style="margin: 1.25rem 0; padding: 1rem; border-radius: 8px; background-color: rgba(220, 50, 47, 0.15); border: 1px solid var(--solar-red, #dc322f); color: #ff8b8b; text-align: center;">
@@ -207,7 +199,6 @@
 
             </form>
 
-            <!-- Features Grid (Solar Cards) -->
             <section class="features-grid" style="margin-top: 1.5rem; padding: 0;">
                 <div class="feature-card">
                     <div class="feature-icon-box">
@@ -260,7 +251,6 @@
         </main>
     </div>
 
-    <!-- Pure CSS Lightbox Modals for Uploaded Files -->
     {% if uploaded_files %}
     {% for item in uploaded_files %}
     <div id="modal-upload-{{ loop.index0 }}" class="lightbox-modal">

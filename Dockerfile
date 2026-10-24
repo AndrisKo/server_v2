@@ -11,17 +11,14 @@ FROM python:3.13-slim
 
 WORKDIR /app
 
-# Системные библиотеки для Pillow и PostgreSQL
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libpq5 \
     libjpeg62-turbo \
     zlib1g \
     && rm -rf /var/lib/apt/lists/*
 
-# Копируем установленные зависимости из builder
 COPY --from=builder /root/.local /root/.local
 
-# Копируем код приложения
 COPY app.py .
 COPY utils/ ./utils/
 COPY templates/ ./templates/
