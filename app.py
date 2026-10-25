@@ -134,25 +134,25 @@ def upload_page(request: Request, uploaded: str | None = None, error: str | None
 def upload_file(
     request: Request,
     background_tasks: BackgroundTasks,
-    images: list[UploadFile] | None = File(None),
+    images: list[UploadFile] = File([]),
 ):
     """Загрузка изображений: мгновенное сохранение и отложенная фоновая оптимизация."""
-    # 1. Отсеиваем пустые поля формы (браузер шлёт пустой файл, если ничего не выбрано)
-    uploads = [img for img in images or [] if img.filename]
+    # 1. Отсеиваем пустые поля формы
+    uploads = [img for img in images if img.filename]
     if not uploads:
         return upload_error("Файл не выбран.")
     if len(uploads) > MAX_FILES_PER_REQUEST:
         return upload_error(f"Можно загрузить не более {MAX_FILES_PER_REQUEST} файлов за один раз.")
 
     client_ip = get_client_ip(request)
-    saved = []   # имена сохранённых файлов
-    errors = []  # сообщения об ошибках
+    saved = []
+    errors = []
 
     for upload in uploads:
         name = upload.filename
 
-        # 2. Читаем файл (с ограничением по размеру) и проверяем его
-        contents = upload.file.read(file_utils.MAX_UPLOAD_SIZE + 1)
+        # 2. Читаем файл и проверяем его
+        contents = upload.file.read()
         valid, new_filename, error_text = file_utils.validate_image(contents, name)
         if not valid:
             message = f"{name}: {error_text}"
@@ -160,18 +160,16 @@ def upload_file(
             errors.append(message)
             continue
 
-        # 3. Сохраняем исходное изображение на диск и запись о нём в БД
+        # 3. Сохраняем изображение на диск и запись о нём в БД
         save_path = STORAGE_DIR / new_filename
         try:
             save_path.write_bytes(contents)
-            file_type = Path(new_filename).suffix.lstrip(".")
-            db.save_image_metadata(new_filename, Path(name).name, len(contents), file_type, client_ip)
+            file_type = new_filename.split(".")[-1]
+            db.save_image_metadata(new_filename, name, len(contents), file_type, client_ip)
             saved.append(new_filename)
-            # Отправляем сжатие в фоновую очередь: клиент не ждёт ни секунды!
             background_tasks.add_task(background_optimize_task, new_filename)
             logger.log_action("Успех", f"изображение {new_filename} загружено.")
         except Exception as e:
-            # если что-то пошло не так — удаляем файл с диска, чтобы не оставлять мусор
             save_path.unlink(missing_ok=True)
             message = f"{name}: не удалось сохранить файл"
             logger.log_action("Ошибка", f"{message} ({e})")
@@ -182,7 +180,7 @@ def upload_file(
         return upload_error("; ".join(errors))
 
     # 5. Показываем загруженные файлы (и предупреждение, если часть пропущена)
-    redirect_url = f"/upload?uploaded={urllib.parse.quote(','.join(saved))}"
+    redirect_url = f"/upload?uploaded={','.join(saved)}"
     if errors:
         warning = "Некоторые файлы пропущены: " + "; ".join(errors)
         redirect_url += f"&error={urllib.parse.quote(warning)}"
