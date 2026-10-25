@@ -144,8 +144,7 @@ def upload_file(request: Request, images: list[UploadFile] | None = File(None)):
             errors.append(message)
             continue
 
-        # 3. Сжимаем изображение, сохраняем на диск и запись о нём в БД
-        contents = file_utils.optimize_image(contents, new_filename)
+        # 3. Сохраняем исходное изображение на диск и запись о нём в БД
         save_path = STORAGE_DIR / new_filename
         try:
             save_path.write_bytes(contents)

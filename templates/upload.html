@@ -294,39 +294,6 @@
 </div>
 {% endfor %}
 {% endif %}
-<!-- Модальное окно индикации загрузки и оптимизации фото (Bootstrap Solar) -->
-<div id="uploadLoadingModal" class="solar-modal-backdrop" aria-hidden="true">
-    <div class="upload-modal-dialog" role="alert" aria-live="assertive">
-        <div class="upload-spinner-container">
-            <div class="spinner-border" role="status">
-                <span style="display: none;">Загрузка...</span>
-            </div>
-            <div class="upload-spinner-icon">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                    <polyline points="17 8 12 3 7 8"></polyline>
-                    <line x1="12" y1="3" x2="12" y2="15"></line>
-                </svg>
-            </div>
-        </div>
-
-        <h3 class="solar-modal-title" style="margin-bottom: 0.45rem;">Загрузка и оптимизация...</h3>
-        <p class="solar-modal-desc" style="margin-bottom: 1.25rem;">
-            Изображения сжимаются алгоритмом Pillow и сохраняются на сервере. Пожалуйста, подождите — страница обновится автоматически.
-        </p>
-
-        <div class="upload-progress-wrapper">
-            <div class="progress" role="progressbar" aria-label="Процесс загрузки" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100">
-                <div class="progress-bar"></div>
-            </div>
-        </div>
-
-        <div class="upload-status-badge">
-            <span class="upload-pulsing-dot"></span>
-            <span id="uploadStatusText">Обработка файлов...</span>
-        </div>
-    </div>
-</div>
 
 <footer class="site-footer">
     <div class="footer-container">
@@ -418,36 +385,10 @@
 
     function handleUpload(input) {
         if (!input.files || input.files.length === 0) return;
-        const count = input.files.length;
-        const statusText = document.getElementById('uploadStatusText');
-        const loadingModal = document.getElementById('uploadLoadingModal');
-
-        if (statusText) {
-            statusText.textContent = count > 1 
-                ? `Выбрано файлов: ${count} • Оптимизация Pillow` 
-                : `Выбран 1 файл • Оптимизация Pillow`;
-        }
-
-        if (loadingModal) {
-            loadingModal.classList.add('is-active');
-            document.body.style.overflow = 'hidden';
-        }
-
         input.style.pointerEvents = 'none';
         if (input.form) {
             input.form.submit();
         }
-    }
-
-    const uploadForm = document.getElementById('uploadForm');
-    if (uploadForm) {
-        uploadForm.addEventListener('submit', function () {
-            const loadingModal = document.getElementById('uploadLoadingModal');
-            if (loadingModal) {
-                loadingModal.classList.add('is-active');
-                document.body.style.overflow = 'hidden';
-            }
-        });
     }
 </script>
 </body>

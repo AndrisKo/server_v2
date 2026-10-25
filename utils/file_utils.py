@@ -66,30 +66,3 @@ def validate_image(contents: bytes, filename: str):
     return True, new_filename, ""
 
 
-def optimize_image(contents: bytes, filename: str) -> bytes:
-    """Сжатие и уменьшение разрешения огромных фото перед сохранением."""
-    try:
-        img = Image.open(io.BytesIO(contents))
-        # Ограничиваем максимальное разрешение до 1920x1920
-        img.thumbnail((1920, 1920), Image.Resampling.LANCZOS)
-
-        output = io.BytesIO()
-        ext = Path(filename).suffix.lower().lstrip(".")
-
-        if ext in ("jpg", "jpeg"):
-            if img.mode in ("RGBA", "P"):
-                img = img.convert("RGB")
-            img.save(output, format="JPEG", quality=85, optimize=True)
-            return output.getvalue()
-        elif ext == "png":
-            img.save(output, format="PNG", optimize=True)
-            return output.getvalue()
-        elif ext == "gif":
-            img.save(output, format="GIF", optimize=True)
-            return output.getvalue()
-    except Exception:
-        pass
-
-    return contents
-
-
