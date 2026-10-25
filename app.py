@@ -251,8 +251,7 @@ def serve_image(filename: str):
         logger.log_action("Ошибка", f"изображение {file_path.name} не найдено")
         raise HTTPException(status_code=404, detail="Изображение не найдено")
 
-    content_type = file_utils.get_content_type(file_path.name)
-    return FileResponse(file_path, media_type=content_type)
+    return FileResponse(file_path)
 
 
 @app.get("/about", response_class=HTMLResponse)

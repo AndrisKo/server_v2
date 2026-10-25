@@ -5,31 +5,18 @@ from PIL import Image
 
 MAX_UPLOAD_SIZE = 5 * 1024 * 1024
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
-
-MIME_TYPES = {
-    ".jpg": "image/jpeg",
-    ".jpeg": "image/jpeg",
-    ".png": "image/png",
-    ".gif": "image/gif",
-}
+FORMATS = {"JPEG": ".jpg", "PNG": ".png", "GIF": ".gif"}
 
 
 def is_allowed_file(filename: str) -> bool:
     """Проверка допустимости расширения файла"""
     # расширение без точки и маленькими буквами, например "png"
-    ext = Path(filename).suffix.replace(".", "").lower()
-    if ext in ALLOWED_EXTENSIONS:
-        return True
-    return False
-
-
-def get_content_type(filename: str) -> str:
-    """Определение MIME-типа изображения по расширению"""
-    return MIME_TYPES.get(Path(filename).suffix.lower(), "application/octet-stream")
+    ext = Path(filename).suffix.lstrip(".").lower()
+    return ext in ALLOWED_EXTENSIONS
 
 
 def validate_image(contents: bytes, filename: str):
-    """Проверяет файл изображения на макс. размер, поддерживаемый формат файла..."""
+    """Проверяет файл изображения на макс. размер и поддерживаемый формат."""
     if not contents:
         return False, "", "файл пустой"
 
@@ -43,22 +30,13 @@ def validate_image(contents: bytes, filename: str):
     try:
         img = Image.open(io.BytesIO(contents))
         img.verify()
-        fmt = img.format
+        fmt = (img.format or "").upper()
     except Exception:
         return False, "", "повреждённый файл изображения"
 
-    if fmt is None:
-        fmt = ""
-    fmt = fmt.upper()
-
     # расширение берём по настоящему формату файла, а не по имени
-    if fmt == "JPEG":
-        ext = ".jpg"
-    elif fmt == "PNG":
-        ext = ".png"
-    elif fmt == "GIF":
-        ext = ".gif"
-    else:
+    ext = FORMATS.get(fmt)
+    if not ext:
         return False, "", f"неподдерживаемый формат файла ({fmt})"
 
     # новое случайное имя файла, чтобы файлы не перезаписывали друг друга
