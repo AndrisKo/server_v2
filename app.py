@@ -32,8 +32,7 @@ MAX_FILES_PER_REQUEST = 20
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Инициализация базы данных и рабочих каталогов при запуске приложения."""
-    STORAGE_DIR.mkdir(parents=True, exist_ok=True)
+    """Инициализация базы данных при запуске приложения."""
     db.init_db()
     yield
 
@@ -46,7 +45,9 @@ templates = Jinja2Templates(directory=TEMPLATES_DIR)
 
 def get_client_ip(request: Request):
     """Узнаёт реальный IP-адрес пользователя."""
-    return request.headers.get("x-real-ip") or (request.client.host if request.client else "127.0.0.1")
+    if "x-real-ip" in request.headers:
+        return request.headers["x-real-ip"]
+    return request.client.host if request.client else "127.0.0.1"
 
 
 def upload_error(message):
@@ -56,7 +57,7 @@ def upload_error(message):
 
 def background_optimize_task(filename: str):
     """Фоновая задача: сжатие изображения в отдельном потоке и обновление размера в БД."""
-    file_path = STORAGE_DIR / Path(filename).name
+    file_path = STORAGE_DIR / filename
     new_size = file_utils.optimize_saved_image(file_path)
     if new_size is not None:
         try:
@@ -103,26 +104,21 @@ def favicon():
 
 
 @app.get("/upload", response_class=HTMLResponse)
-def upload_page(request: Request, uploaded: str | None = None, error: str | None = None):
+def upload_page(request: Request, uploaded=None, error=None):
     """Форма для загрузки одного или нескольких файлов."""
     files = []
 
     if uploaded:
-        names = uploaded.split(",")
-        for name in names:
+        for name in uploaded.split(","):
             name = name.strip()
-            if name == "":
+            if not name:
                 continue
-
             file_path = STORAGE_DIR / Path(name).name
-
             if file_path.is_file():
-                file_info = {
+                files.append({
                     "name": file_path.name,
-                    "url": "/images/" + file_path.name,
                     "size": file_path.stat().st_size,
-                }
-                files.append(file_info)
+                })
 
     return templates.TemplateResponse(
         request=request,
@@ -213,23 +209,16 @@ def delete_image(request: Request, image_id: int):
 
     try:
         deleted_filename = db.delete_image_by_id(image_id, client_ip=client_ip)
-
         if deleted_filename:
-            # удаляем сам файл с диска
-            file_path = STORAGE_DIR / Path(deleted_filename).name
-            if file_path.exists():
-                file_path.unlink()
-
+            (STORAGE_DIR / deleted_filename).unlink(missing_ok=True)
             logger.log_action("Успех", f"изображение {deleted_filename} (id={image_id}) удалено пользователем {client_ip}.")
             return RedirectResponse("/images-list?deleted=1", status_code=303)
 
-        else:
-            logger.log_action("Ошибка", f"попытка удаления id={image_id} (не найдено или чужой IP {client_ip})")
-            message = "Изображение не найдено или у вас нет прав на его удаление"
-            return RedirectResponse(f"/images-list?error={urllib.parse.quote(message)}", status_code=303)
+        logger.log_action("Ошибка", f"попытка удаления id={image_id} (не найдено или чужой IP {client_ip})")
+        message = "Изображение не найдено или у вас нет прав на его удаление"
+        return RedirectResponse(f"/images-list?error={urllib.parse.quote(message)}", status_code=303)
 
     except Exception as e:
-        # текст ошибки пишем только в лог, пользователю показываем простое сообщение
         logger.log_action("Ошибка", f"сбой удаления изображения id={image_id} ({e})")
         message = "Не удалось удалить изображение"
         return RedirectResponse(f"/images-list?error={urllib.parse.quote(message)}", status_code=303)
@@ -260,24 +249,16 @@ def about(request: Request):
 @app.exception_handler(StarletteHTTPException)
 @app.exception_handler(Exception)
 def app_exception_handler(request: Request, exc: Exception):
-    # узнаём код ошибки и текст
-    if isinstance(exc, StarletteHTTPException):
+    """Обработчик всех ошибок с красивой страницей error.html."""
+    if isinstance(exc, StarletteHTTPException) and exc.status_code < 500:
         code = exc.status_code
-        detail = exc.detail
-    else:
-        code = 500
-        detail = None
-
-    if code >= 500:
-        # ошибку сервера пишем в лог полностью
-        logger.log_action("Ошибка", f"{code} {request.method} {request.url.path} ({exc})")
-        detail = "Внутренняя ошибка сервера"
-    else:
+        detail = exc.detail or "Ошибка запроса"
         logger.log_action("Ошибка", f"{code} {request.method} {request.url.path}")
-        if detail is None:
-            detail = "Ошибка запроса"
+    else:
+        code = getattr(exc, "status_code", 500)
+        detail = "Внутренняя ошибка сервера"
+        logger.log_action("Ошибка", f"{code} {request.method} {request.url.path} ({exc})")
 
-    # всегда показываем красивую страницу ошибки в стиле Solar
     return templates.TemplateResponse(
         request=request,
         name="error.html",
