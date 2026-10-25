@@ -194,11 +194,6 @@ def upload_file(
 def gallery(request: Request, page: int = 1):
     """Галерея картинок с пагинацией по 12 элементов."""
     context = get_page_data(page, per_page=12)
-
-    # шаблону нужно поле name, поэтому добавляем его к каждой картинке
-    for image in context["images"]:
-        image["name"] = image["filename"]
-
     return templates.TemplateResponse(request=request, name="images.html", context=context)
 
 

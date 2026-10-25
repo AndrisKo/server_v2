@@ -63,7 +63,7 @@ def get_images_page(page=1, page_size=10):
     offset = (page - 1) * page_size
 
     query = """
-        SELECT id, filename, original_name, size,
+        SELECT id, filename, filename AS name, original_name, size,
                ROUND(size / 1024.0, 1) AS size_kb,
                TO_CHAR(upload_time, 'YYYY-MM-DD HH24:MI:SS') AS upload_time,
                file_type, uploader_ip
