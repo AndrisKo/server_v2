@@ -98,3 +98,13 @@ def delete_image_by_id(image_id, client_ip):
     if row is None:
         return None
     return str(row[0])
+
+
+def update_image_size(filename: str, new_size: int):
+    """Обновляет размер файла в БД после завершения фоновой оптимизации."""
+    query = "UPDATE images SET size = %s WHERE filename = %s;"
+    with get_db_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(query, (new_size, filename))
+        conn.commit()
+

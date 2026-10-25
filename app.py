@@ -6,7 +6,7 @@ from contextlib import asynccontextmanager
 
 import uvicorn
 from dotenv import load_dotenv
-from fastapi import FastAPI, File, HTTPException, Request, UploadFile
+from fastapi import BackgroundTasks, FastAPI, File, HTTPException, Request, UploadFile
 from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -52,6 +52,18 @@ def get_client_ip(request: Request):
 def upload_error(message):
     """Возвращает пользователя на страницу загрузки с текстом ошибки."""
     return RedirectResponse(f"/upload?error={urllib.parse.quote(message)}", status_code=303)
+
+
+def background_optimize_task(filename: str):
+    """Фоновая задача: сжатие изображения в отдельном потоке и обновление размера в БД."""
+    file_path = STORAGE_DIR / Path(filename).name
+    new_size = file_utils.optimize_saved_image(file_path)
+    if new_size is not None:
+        try:
+            db.update_image_size(filename, new_size)
+            logger.log_action("Оптимизация (фон)", f"{filename} оптимизировано до {new_size} байт")
+        except Exception as e:
+            logger.log_action("Ошибка (фон)", f"сбой обновления размера {filename} в БД ({e})")
 
 
 def get_page_data(page, per_page):
@@ -119,8 +131,12 @@ def upload_page(request: Request, uploaded: str | None = None, error: str | None
     )
 
 @app.post("/upload")
-def upload_file(request: Request, images: list[UploadFile] | None = File(None)):
-    """Загрузка изображений, сохранение на диск и в PostgreSQL."""
+def upload_file(
+    request: Request,
+    background_tasks: BackgroundTasks,
+    images: list[UploadFile] | None = File(None),
+):
+    """Загрузка изображений: мгновенное сохранение и отложенная фоновая оптимизация."""
     # 1. Отсеиваем пустые поля формы (браузер шлёт пустой файл, если ничего не выбрано)
     uploads = [img for img in images or [] if img.filename]
     if not uploads:
@@ -152,6 +168,8 @@ def upload_file(request: Request, images: list[UploadFile] | None = File(None)):
             with db.get_db_connection() as conn:
                 db.save_image_metadata(conn, new_filename, Path(name).name, len(contents), file_type, client_ip)
             saved.append(new_filename)
+            # Отправляем сжатие в фоновую очередь: клиент не ждёт ни секунды!
+            background_tasks.add_task(background_optimize_task, new_filename)
             logger.log_action("Успех", f"изображение {new_filename} загружено.")
         except Exception as e:
             # если что-то пошло не так — удаляем файл с диска, чтобы не оставлять мусор

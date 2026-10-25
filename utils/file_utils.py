@@ -66,3 +66,40 @@ def validate_image(contents: bytes, filename: str):
     return True, new_filename, ""
 
 
+def optimize_saved_image(file_path: Path) -> int | None:
+    """
+    Фоновая оптимизация сохранённого на диске изображения:
+    уменьшение разрешения до 1920x1920 и сжатие.
+    Возвращает новый размер файла в байтах или None в случае ошибки/отсутствия изменений.
+    """
+    try:
+        if not file_path.is_file():
+            return None
+
+        ext = file_path.suffix.lower().lstrip(".")
+        temp_path = file_path.with_suffix(file_path.suffix + ".opt")
+
+        with Image.open(file_path) as img:
+            # Ограничиваем максимальное разрешение до 1920x1920
+            img.thumbnail((1920, 1920), Image.Resampling.LANCZOS)
+
+            if ext in ("jpg", "jpeg"):
+                if img.mode in ("RGBA", "P"):
+                    img = img.convert("RGB")
+                img.save(temp_path, format="JPEG", quality=85, optimize=True)
+            elif ext == "png":
+                img.save(temp_path, format="PNG", optimize=True)
+            elif ext == "gif":
+                img.save(temp_path, format="GIF", optimize=True)
+            else:
+                return None
+
+        # Атомарно заменяем исходный файл оптимизированным
+        temp_path.replace(file_path)
+        return file_path.stat().st_size
+    except Exception:
+        if 'temp_path' in locals() and temp_path.exists():
+            temp_path.unlink(missing_ok=True)
+        return None
+
+
