@@ -46,15 +46,16 @@ def init_db():
         return False
 
 
-def save_image_metadata(conn, filename, original_name, size, file_type, uploader_ip):
-    """Сохранение информации о загруженном файле в таблицу images. Возвращает id записи."""
+def save_image_metadata(filename, original_name, size, file_type, uploader_ip):
+    """Сохранение информации о загруженном файле в таблицу images."""
     query = """
         INSERT INTO images (filename, original_name, size, file_type, uploader_ip)
-        VALUES (%s, %s, %s, %s, %s) RETURNING id;
+        VALUES (%s, %s, %s, %s, %s);
     """
-    with conn.cursor() as cur:
-        cur.execute(query, (filename, original_name, size, file_type, uploader_ip))
-        return cur.fetchone()[0]
+    with get_db_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(query, (filename, original_name, size, file_type, uploader_ip))
+        conn.commit()
 
 
 def get_images_page(page=1, page_size=10):

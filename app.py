@@ -165,8 +165,7 @@ def upload_file(
         try:
             save_path.write_bytes(contents)
             file_type = Path(new_filename).suffix.lstrip(".")
-            with db.get_db_connection() as conn:
-                db.save_image_metadata(conn, new_filename, Path(name).name, len(contents), file_type, client_ip)
+            db.save_image_metadata(new_filename, Path(name).name, len(contents), file_type, client_ip)
             saved.append(new_filename)
             # Отправляем сжатие в фоновую очередь: клиент не ждёт ни секунды!
             background_tasks.add_task(background_optimize_task, new_filename)
