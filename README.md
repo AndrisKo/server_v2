@@ -165,10 +165,10 @@ python3 scripts/backup.py
 #### Восстановление:
 ```bash
 # Восстановить самый свежий бэкап:
-python3 scripts/restore.py
+sudo python3 scripts/restore.py
 
 # Или восстановить конкретный файл:
-python3 scripts/restore.py backups/backup_2026-10-24_120000.sql
+sudo python3 scripts/restore.py backups/backup_2026-10-24_120000.sql
 ```
 - Восстанавливает структуру и записи в PostgreSQL через `psql`.
 - Распаковывает соответствующий архив изображений обратно в хранилище.
